@@ -9,10 +9,12 @@ class QuestionController {
 
     private CsvReader $csvReader;
     private Response $response;
+    private QuestionService $questionService;
 
     public function __construct() {
         $this->csvReader = new CsvReader();
         $this->response = new Response();
+        $this->questionService = new QuestionService();
     }
 
      public function showCsvData(): void {
@@ -62,36 +64,48 @@ class QuestionController {
 
     // ...existing code...
 
-    // Nuevo método: recibir archivo enviado por Postman (form-data) con la clave 'file'
-    public function uploadCsv(): void {
+   public function uploadCsv() {
         try {
-            if (!isset($_FILES['file'])) {
-                $this->response->json2(400, 'No se recibió ningún archivo. Use la clave "file" en form-data.');
-                return;
+            // Archivo enviado en form-data con key 'csv_file'
+            if (!isset($_FILES['csv_file'])) {
+                $this->response->json2(400, 'No se recibió ningún archivo. Use la clave "csv_file" en form-data.');
+                return false;
             }
 
-            $file = $_FILES['file'];
+            $file = $_FILES['csv_file'];
 
             if ($file['error'] !== UPLOAD_ERR_OK) {
                 $this->response->json2(400, 'Error en la subida del archivo: ' . $this->fileUploadErrorMessage($file['error']));
-                return;
+                return false;
             }
 
             // Validación simple de extensión
             $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
             if (strtolower($ext) !== 'csv') {
                 $this->response->json2(400, 'El archivo debe tener extensión .csv');
-                return;
+                return false;
             }
+
+            // Campo adicional enviado en form-data: 'csv_type' (texto)
+            $csvType = $_POST['csv_type'] ?? null;
 
             $tmpPath = $file['tmp_name'];
 
             // Leer CSV desde el archivo temporal
             $data = $this->csvReader->readCsv($tmpPath);
 
-            $this->response->json2(200, 'CSV leído correctamente', $data);
+            // // Devolver tipo y datos (ajusta según necesites)
+            // $this->response->json2(200, 'CSV leído correctamente', [
+            //     'csv_type' => $csvType,
+            //     'rows' => $data
+            // ]);
+
+            $response = $this->questionService->create($data);
+            return Response::json($response);
+
         } catch (Exception $e) {
             $this->response->json2(500, 'Error al procesar el CSV: ' . $e->getMessage());
+            return false;
         }
     }
 

@@ -14,8 +14,8 @@ class QuestionRoutes {
         }
 
         // GET /questions -> opcional, lista preguntas
-        if ($cleanUri === "/questions" && $method === "GET") {
-            // $controller->getAll(); // si implementas listado
+        if ($cleanUri === "/questions/upload2" && $method === "POST") {
+             $controller->uploadCsv(); // si implementas listado
             return true;
         }
 
