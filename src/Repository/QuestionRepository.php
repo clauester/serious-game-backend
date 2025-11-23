@@ -11,13 +11,13 @@ class QuestionRepository {
 
     public function getAllQuestions( ) {
         
-        $stmt = $this->pdo->prepare("CALL sp_get_users()");
+        $stmt = $this->pdo->prepare("CALL sp_get_all_questions()");
 
         $stmt->execute();
-        $users = $stmt->fetchAll();
+        $questions = $stmt->fetchAll();
         $stmt->closeCursor();
 
-        return $users;
+        return $questions;
     }
 
     public function createQuestion(array $preguntasArray):bool {

@@ -17,6 +17,11 @@ class QuestionController {
         $this->questionService = new QuestionService();
     }
 
+    public function findAll() {
+        $questions = $this->questionService->findAll();
+        $this->response->json2(200, 'Listado de preguntas', $questions);
+    }
+
      public function showCsvData(): void {
         try {
             // 1) Si se subió un archivo por form-data (csv_file)

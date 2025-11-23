@@ -19,6 +19,12 @@ class QuestionRoutes {
             return true;
         }
 
+        // GET /questions -> opcional, lista preguntas
+        if ($cleanUri === "/questions/all" && $method === "GET") {
+             $controller->findAll(); // si implementas listado
+            return true;
+        }
+
         // // GET /questions/{id} -> opcional, detalles de pregunta
         // if (preg_match("#^/questions/([0-9a-fA-F-]{36})$#", $cleanUri, $matches)
         //     && $method === "GET") {

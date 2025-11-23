@@ -2,49 +2,61 @@
 
 require_once __DIR__ . '/../Repository/QuestionRepository.php';
 
-class QuestionService {
+class QuestionService
+{
 
     private $repo;
     private $csvReader;
     private $response;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->repo = new QuestionRepository();
         $this->csvReader = new CsvReader();
         $this->response = new Response();
     }
 
-    public function findAll($rows)  {
+    public function findAll()
+    {
+       $rows = $this->repo->getAllQuestions();
 
-        foreach ($rows as $row) {
+    $questions = [];
 
-            $questionTitle = $row["title"];
-            $questionDescription = $row["description"];
-            $questionType = $row["type_name"]; // tipo por nombre
-            $optionText = $row["option_text"];
-            $isCorrect = $row["is_correct"];
+    foreach ($rows as $row) {
 
-            // Aquí llamas al SP del repository
-            $this->repo->createQuestion(
-                $questionTitle,
-                $questionDescription,
-                $questionType,
-                $optionText,
-                $isCorrect
-            );
+        $id = $row["id"];
+
+        if (!isset($questions[$id])) {
+            $questions[$id] = [
+                "id" => $row["id"],
+                "title" => $row["title"],
+                "description" => $row["description"],
+                "type" => $row["type"],
+                "tip_note" => $row["tip_note"],
+                "created_on" => $row["created_on"],
+                "options" => []
+            ];
         }
-    
+
+        $questions[$id]["options"][] = [
+            "text_option" => $row["text_option"],
+            "is_correct" => (int)$row["is_correct"]
+        ];
     }
 
-    public function create($data) : bool {
+    return array_values($questions);
+    }
+
+    public function create($data): bool
+    {
         $arrayTransformed = $this->csvReader->rawToJson($data);
 
-        // Devolver tipo y datos (ajusta según necesites)
-            $this->response->json2(200, 'CSV leído correctamente', [
-                'csv_type' => "csvType",
-                'rows' => $arrayTransformed
-            ]);
-       return $this->repo->createQuestion($arrayTransformed);
+        // // Devolver tipo y datos (ajusta según necesites)
+        // $this->response->json2(200, 'CSV leído correctamente', [
+        //     'csv_type' => "csvType",
+        //     'rows' => $arrayTransformed
+        // ]);
+        return $this->repo->createQuestion($arrayTransformed);
 
 
 
@@ -68,5 +80,5 @@ class QuestionService {
     //         $data["status_id"]
     //     );
     // }
-    
+
 }
