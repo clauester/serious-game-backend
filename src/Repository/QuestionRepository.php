@@ -20,11 +20,14 @@ class QuestionRepository {
         return $questions;
     }
 
-    public function createQuestion(array $preguntasArray):bool {
+    public function createQuestion(array $preguntasArray):array {
 
         // 1. Iniciar la Transacción Única
         $this->pdo->beginTransaction(); 
         
+        $skipped = [];
+        $created = 0;
+
         try {
             // 2. Preparar Sentencias (usando el ID_TEMPORAL del array como parámetro)
             $stmt_pregunta = $this->pdo->prepare(
@@ -37,11 +40,19 @@ class QuestionRepository {
             
             // 3. Bucle Externo: Iterar sobre cada Pregunta
             foreach ($preguntasArray as $pregunta) {
+
+                $titulo = trim($pregunta['TITULO_PREGUNTA']);
+
+                // Evita duplicados por título
+                if ($this->questionExistsByTitle($titulo)) {
+                    $skipped[] = $titulo;
+                    continue;
+                }
                 
                 // Mapeo para SP de Pregunta (ID_PREGUNTA_UNICA es el ID temporal o de negocio)
                 $parametros_pregunta = [
                     //$pregunta['ID_PREGUNTA_UNICA'], // ID temporal
-                    $pregunta['TITULO_PREGUNTA'],
+                    $titulo,
                     $pregunta['DESCRIPCION_PREGUNTA'],
                     $pregunta['TIPO_PREGUNTA_ID'],
                     $pregunta['NOTA_CONSEJO']
@@ -86,11 +97,17 @@ class QuestionRepository {
                     // Limpiar el resultado (necesario si el SP de opción también devuelve datos)
                     $stmt_opcion->closeCursor();
                 }
+                $created++;
             }
             
             // 5. Commit: Si todo el proceso fue exitoso
             $this->pdo->commit();
-            return true;
+
+            return [
+                'created'        => $created,
+                'skipped'        => $skipped,
+                'totalReceived' => count($preguntasArray)
+            ];
 
         } catch (\PDOException $e) {
             // 4. Revertir la Transacción (Rollback)
@@ -105,5 +122,17 @@ class QuestionRepository {
         }
       
     }
+
+
+    // Comprueba si ya existe una pregunta con el mismo título
+private function questionExistsByTitle(string $title): bool
+{
+    // Ajusta el nombre de la tabla y columna si difieren
+    $stmt = $this->pdo->prepare("SELECT id FROM question WHERE title = ? LIMIT 1");
+    $stmt->execute([$title]);
+    $exists = (bool) $stmt->fetchColumn();
+    $stmt->closeCursor();
+    return $exists;
+}
 
 }

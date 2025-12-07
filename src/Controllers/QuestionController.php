@@ -106,7 +106,7 @@ class QuestionController {
             // ]);
 
             $response = $this->questionService->create($data);
-            return Response::json($response);
+            $this->response->json2(200, 'Proceso completado', $response);
 
         } catch (Exception $e) {
             $this->response->json2(500, 'Error al procesar el CSV: ' . $e->getMessage());

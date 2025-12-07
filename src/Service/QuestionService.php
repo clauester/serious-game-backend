@@ -47,7 +47,7 @@ class QuestionService
     return array_values($questions);
     }
 
-    public function create($data): bool
+    public function create($data)
     {
         $arrayTransformed = $this->csvReader->rawToJson($data);
 
