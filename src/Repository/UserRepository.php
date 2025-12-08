@@ -68,4 +68,5 @@ class UserRepository {
         return $stmt->fetch(); // tu SP debe retornar el nuevo usuario
     }
 
+    
 }

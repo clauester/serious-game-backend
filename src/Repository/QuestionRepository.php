@@ -123,6 +123,44 @@ class QuestionRepository {
       
     }
 
+    public function saveUserAnswerOption(
+        string $answerId,
+        string $groupId,
+        string $userId,
+        string $questionId,
+        ?string $qOptionId
+    ): array {
+        $stmt = $this->pdo->prepare("CALL sp_register_user_answer(?, ?, ?, ?, ?)");
+        
+        $stmt->execute([
+            $answerId,
+            $groupId,
+            $userId,
+            $questionId,
+            $qOptionId
+        ]);
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->closeCursor();
+        
+        return $result ?: [];
+    }
+
+    public function getQuestionStats(?string $id) {
+        if ($id === 'all') {
+            $id = null;
+        }
+        $stmt = $this->pdo->prepare("CALL sp_get_group_question_stats(:p_group_id)");
+        $stmt->bindParam(":p_group_id", $id, PDO::PARAM_STR);
+        $stmt->execute();
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // limpiar más resultsets
+        while ($stmt->nextRowset()) {}
+
+        return $data;
+    }
+
 
     // Comprueba si ya existe una pregunta con el mismo título
 private function questionExistsByTitle(string $title): bool

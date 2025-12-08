@@ -114,6 +114,32 @@ class QuestionController {
         }
     }
 
+    public function saveUserAnswerOption() {
+        try {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            $result = $this->questionService->saveUserAnswer(
+                $data['answer_id'], 
+                $data['group_id'], 
+                $data['user_id'], 
+                $data['question_id'], 
+                $data['q_option_id']);
+                
+            $this->response->json2(200, 'Respuesta guardada correctamente', $result);
+        } catch (Exception $e) {
+            $this->response->json2(500, 'Error al guardar la respuesta: ' . $e->getMessage());
+        }
+    }
+
+    public function getQuestionStats($id) {
+        try {
+            $result = $this->questionService->getQuestionStats($id);
+            $this->response->json2(200, 'Estadísticas de la pregunta obtenidas correctamente', $result);
+        } catch (Exception $e) {
+            $this->response->json2(500, 'Error al obtener las estadísticas: ' . $e->getMessage());
+        }
+    }
+
     // Helper para mensajes de error de subida
     private function fileUploadErrorMessage(int $code): string {
         switch ($code) {

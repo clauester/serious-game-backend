@@ -16,35 +16,45 @@ class QuestionService
         $this->response = new Response();
     }
 
-    public function findAll()
-    {
-       $rows = $this->repo->getAllQuestions();
+    public function findAll(){
+        $rows = $this->repo->getAllQuestions();
 
-    $questions = [];
+        $questions = [];
 
-    foreach ($rows as $row) {
+        foreach ($rows as $row) {
 
-        $id = $row["id"];
+            $id = $row["id"];
 
-        if (!isset($questions[$id])) {
-            $questions[$id] = [
-                "id" => $row["id"],
-                "title" => $row["title"],
-                "description" => $row["description"],
-                "type" => $row["type"],
-                "tip_note" => $row["tip_note"],
-                "created_on" => $row["created_on"],
-                "options" => []
+            if (!isset($questions[$id])) {
+                $questions[$id] = [
+                    "id" => $row["id"],
+                    "title" => $row["title"],
+                    "description" => $row["description"],
+                    "type" => $row["type"],
+                    "tip_note" => $row["tip_note"],
+                    "created_on" => $row["created_on"],
+                    "options" => []
+                ];
+            }
+
+            $questions[$id]["options"][] = [
+                "text_option" => $row["text_option"],
+                "is_correct" => (int)$row["is_correct"]
             ];
         }
 
-        $questions[$id]["options"][] = [
-            "text_option" => $row["text_option"],
-            "is_correct" => (int)$row["is_correct"]
-        ];
+        return array_values($questions);
     }
 
-    return array_values($questions);
+    public function saveUserAnswer($answerId, $groupId, $userId, $questionId, $qOptionId)
+    {
+        return $this->repo->saveUserAnswerOption(
+            $answerId,
+            $groupId,
+            $userId,
+            $questionId,
+            $qOptionId
+        );
     }
 
     public function create($data)
@@ -68,6 +78,10 @@ class QuestionService
         //     $data["rol_id"],
         //     $data["status_id"]
         // );
+    }
+
+    public function getQuestionStats($id) {
+        return $this->repo->getQuestionStats($id);
     }
 
     // public function update($data, $id) {
