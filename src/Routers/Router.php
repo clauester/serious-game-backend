@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../Routers/UserRoutes.php';
 require_once __DIR__ . '/../Routers/QuestionRoutes.php';
 require_once __DIR__ . '/../Routers/GroupRoutes.php';
+require_once __DIR__ . '/../Routers/AuthRoutes.php';
 
 class Router {
 
@@ -15,6 +16,7 @@ class Router {
         if (UserRoutes::handle($cleanUri, $method)) return;
         if (QuestionRoutes::handle($cleanUri, $method)) return;
         if (GroupRoutes::handle($cleanUri, $method)) return;
+        if (AuthRoutes::handle($cleanUri, $method)) return;
 
         echo "404 Not Found - endpoint no definido";
     }
