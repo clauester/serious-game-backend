@@ -18,6 +18,10 @@ class UserService {
         return $this->repo->getAllUsers($name, $status_id);
     }
 
+    function findAllRoles() {
+        return $this->repo->getAllRoles();
+    }
+
     public function create($data) {
         return $this->repo->createUser(
             $data["name"],
@@ -39,4 +43,11 @@ class UserService {
         );
     }
     
+    public function delete($id) {
+        return $this->repo->deleteUser($id);
+    }
+
+    public function findAllStatuses() {
+        return $this->repo->getStatuses();
+    }
 }

@@ -30,6 +30,15 @@ class UserRepository {
         return $users;
     }
 
+    public function getAllRoles() {
+        $stmt = $this->pdo->prepare("CALL sp_get_all_roles()");
+        $stmt->execute();
+        $roles = $stmt->fetchAll();
+        $stmt->closeCursor();
+
+        return $roles;
+    }
+
     public function createUser(
             string $name, 
             string $email, 
@@ -50,11 +59,11 @@ class UserRepository {
 
     public function updateUser(
             string $id,
-            string $name, 
-            string $email, 
-            string $password, 
-            string $rol_id, 
-            string $status_id ) {
+            ?string $name, 
+            ?string $email, 
+            ?string $password, 
+            ?string $rol_id, 
+            ?string $status_id ) {
 
         $stmt = $this->pdo->prepare("CALL sp_update_user(:p_id, :p_name, :p_email, :p_password, :p_rol_id, :p_status_id)");
         $stmt->bindParam(":p_id", $id );
@@ -68,5 +77,19 @@ class UserRepository {
         return $stmt->fetch(); // tu SP debe retornar el nuevo usuario
     }
 
-    
+    public function getStatuses() {
+        $stmt = $this->pdo->prepare("CALL sp_get_all_status()");
+        $stmt->execute();
+        $statuses = $stmt->fetchAll();
+        $stmt->closeCursor();
+
+        return $statuses;
+    }
+
+    public function deleteUser(string $id) {
+        $stmt = $this->pdo->prepare("CALL sp_delete_user(:p_id)");
+        $stmt->bindParam(":p_id", $id);
+        return $stmt->execute();
+    }   
+
 }

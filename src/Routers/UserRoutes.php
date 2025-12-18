@@ -25,6 +25,17 @@ class UserRoutes {
             return true;
         }
 
+        if($uri === "/users/roles" && $method === "GET"){
+            $controller->getAllRoles();
+            return true;
+        }
+
+        // Delete /users/{uuid}
+        if (preg_match("#^/users/([0-9a-fA-F-]{36})$#", $uri, $matches) && $method === "DELETE") {
+            $controller->delete($matches[1]);
+            return true;
+        }
+
         // POST /users
         if ($uri === "/users" && $method === "POST") {
             $controller->create();
@@ -34,6 +45,10 @@ class UserRoutes {
         // PUT /users/{uuid}
         if (preg_match("#^/users/([0-9a-fA-F-]{36})$#", $uri, $matches) && $method === "PUT") {
             $controller->update($matches[1]);
+            return true;
+        }
+        if($uri === "/users/statuses" && $method === "GET"){
+            $controller->getAllStatuses();
             return true;
         }
 
