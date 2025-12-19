@@ -18,4 +18,8 @@ class GroupService {
         return $this->repo->getAllGroups();
     }
 
+    public function getGroupQuestions($groupId) {
+        return $this->repo->getGroupQuestions($groupId);
+    }
+
 }

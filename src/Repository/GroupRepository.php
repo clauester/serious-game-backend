@@ -33,4 +33,15 @@ class GroupRepository {
         return $groups;
     }
 
+    //get group questions by group id
+    public function getGroupQuestions($groupId) {
+        $stmt = $this->pdo->prepare("CALL sp_get_group_questions(:p_id)");
+        $stmt->bindParam(":p_id", $groupId);
+        $stmt->execute();
+        $questions = $stmt->fetchAll();
+        $stmt->closeCursor();
+
+        return $questions;
+    }
+
 }

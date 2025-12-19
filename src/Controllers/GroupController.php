@@ -21,4 +21,9 @@ class GroupController {
         $result = $this->service->getAllGroups();
         Response::json2(200, 'Grupos obtenidos exitosamente', $result);
     }
+
+    public function getGroupQuestions($groupId) {
+        $result = $this->service->getGroupQuestions($groupId);
+        Response::json2(200, 'Preguntas del grupo obtenidas exitosamente', $result);
+    }
 }

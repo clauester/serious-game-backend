@@ -19,6 +19,12 @@ class GroupRoutes {
             return true;
         }
 
+        // GET /groups/{groupId}/questions - Endpoint para obtener preguntas de un grupo mediante id UUID 
+        if (preg_match('/^\/groups\/([a-f0-9\-]+)\/questions$/', $cleanUri, $matches) && $method === "GET") {
+            $groupId = $matches[1];
+            $controller->getGroupQuestions($groupId);
+            return true;
+        }
 
         return false;
     }
