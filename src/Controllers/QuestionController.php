@@ -1,28 +1,33 @@
 <?php
+
 declare(strict_types=1);
 
 require_once __DIR__ . '/../Utils/CsvReader.php';
 require_once __DIR__ . '/../Utils/Response.php';
 require_once __DIR__ . '/../Service/QuestionService.php';
 
-class QuestionController {
+class QuestionController
+{
 
     private CsvReader $csvReader;
     private Response $response;
     private QuestionService $questionService;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->csvReader = new CsvReader();
         $this->response = new Response();
         $this->questionService = new QuestionService();
     }
 
-    public function findAll() {
+    public function findAll()
+    {
         $questions = $this->questionService->findAll();
         $this->response->json2(200, 'Listado de preguntas', $questions);
     }
 
-     public function showCsvData(): void {
+    public function showCsvData(): void
+    {
         try {
             // 1) Si se subió un archivo por form-data (csv_file)
             if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] !== UPLOAD_ERR_NO_FILE) {
@@ -69,7 +74,8 @@ class QuestionController {
 
     // ...existing code...
 
-   public function uploadCsv() {
+    public function uploadCsv()
+    {
         try {
             // Archivo enviado en form-data con key 'csv_file'
             if (!isset($_FILES['csv_file'])) {
@@ -107,31 +113,33 @@ class QuestionController {
 
             $response = $this->questionService->create($data);
             $this->response->json2(200, 'Proceso completado', $response);
-
         } catch (Exception $e) {
             $this->response->json2(500, 'Error al procesar el CSV: ' . $e->getMessage());
             return false;
         }
     }
 
-    public function saveUserAnswerOption() {
+    public function saveUserAnswerOption()
+    {
         try {
             $data = json_decode(file_get_contents("php://input"), true);
-            
+
             $result = $this->questionService->saveUserAnswer(
-                $data['answer_id'], 
-                $data['group_id'], 
-                $data['user_id'], 
-                $data['question_id'], 
-                $data['q_option_id']);
-                
+                $data['answer_id'],
+                $data['group_id'],
+                $data['user_id'],
+                $data['question_id'],
+                $data['q_option_id']
+            );
+
             $this->response->json2(200, 'Respuesta guardada correctamente', $result);
         } catch (Exception $e) {
             $this->response->json2(500, 'Error al guardar la respuesta: ' . $e->getMessage());
         }
     }
 
-    public function getQuestionStats($id) {
+    public function getQuestionStats($id)
+    {
         try {
             $result = $this->questionService->getQuestionStats($id);
             $this->response->json2(200, 'Estadísticas de la pregunta obtenidas correctamente', $result);
@@ -141,7 +149,8 @@ class QuestionController {
     }
 
     // Helper para mensajes de error de subida
-    private function fileUploadErrorMessage(int $code): string {
+    private function fileUploadErrorMessage(int $code): string
+    {
         switch ($code) {
             case UPLOAD_ERR_INI_SIZE:
             case UPLOAD_ERR_FORM_SIZE:
@@ -158,6 +167,106 @@ class QuestionController {
                 return 'La subida fue detenida por la extensión.';
             default:
                 return 'Error desconocido en la subida.';
+        }
+    }
+
+
+    // prueba de generación preguntas en json con IA
+    public function generateWithAI(): void
+    {
+        $body = json_decode(file_get_contents("php://input"), true) ?? [];
+
+        $count = (int)($body["count"] ?? 5);
+        $difficulty = $body["difficulty"] ?? "baja"; // baja|media|alta
+
+        if ($count < 2 || $count > 25) {
+            Response::json2(400, "cantidad debe estar entre 5 y 25", null);
+            return;
+        }
+        if (!in_array($difficulty, ["baja", "media", "alta"], true)) {
+            Response::json2(400, "dificultad no válida (baja|media|alta)", null);
+            return;
+        }
+
+        // Schema del formato que se requiere recibir de Gemini AI
+        $schema = [
+            "type" => "array",
+            "minItems" => $count,
+            "maxItems" => $count,
+            "items" => [
+                "type" => "object",
+                "properties" => [
+                    "TITULO_PREGUNTA" => ["type" => "string", "minLength" => 10, "maxLength" => 50],
+                    "DESCRIPCION_PREGUNTA" => ["type" => "string", "minLength" => 10, "maxLength" => 150],
+                    "NOTA_CONSEJO" => ["type" => "string", "minLength" => 10, "maxLength" => 80],
+                    "OPCIONES" => [
+                        "type" => "array",
+                        "minItems" => 3,
+                        "maxItems" => 3, // fijo a 3
+                        "items" => [
+                            "type" => "object",
+                            "properties" => [
+                                "TEXTO_OPCION" => ["type" => "string", "minLength" => 3, "maxLength" => 90],
+                                "ES_CORRECTA" => ["type" => "boolean"],
+                            ],
+                            "required" => ["TEXTO_OPCION", "ES_CORRECTA"],
+                            //"additionalProperties" => false
+                        ]
+                    ],
+                ],
+                "required" => ["TITULO_PREGUNTA", "DESCRIPCION_PREGUNTA", "NOTA_CONSEJO", "OPCIONES"],
+                //"additionalProperties" => false
+            ]
+        ];
+
+
+        // Prompt base (luego se pule)
+        $prompt =
+            "Genera {$count} preguntas tipo test para concientizar sobre periodontitis.\n" .
+            "Dificultad: {$difficulty}.\n" .
+            "Formato de salida: DEVUELVE SOLO un JSON válido cuyo valor raíz sea un ARRAY [].\n" .
+            "Cada elemento del array es un objeto con: TITULO_PREGUNTA, DESCRIPCION_PREGUNTA, NOTA_CONSEJO, OPCIONES.\n" .
+            "Reglas:\n" .
+            "- TITULO_PREGUNTA es un texto breve que categoriza la pregunta.\n" .
+            "- DESCRIPCION_PREGUNTA es el enunciado completo de la pregunta.\n" .
+            "- NOTA_CONSEJO es un texto breve tipo pista para ayudar a responder.\n" .
+            "- OPCIONES debe tener EXACTAMENTE 3 elementos.\n" .
+            "- EXACTAMENTE 1 opción con ES_CORRECTA=TRUE.\n" .
+            "- No uses markdown, no agregues texto fuera del JSON.\n";
+
+        try {
+            require_once __DIR__ . '/../Service/GeminiAIService.php';
+            $client = new GeminiAIService();
+            $result = $client->generateJson($prompt, $schema);
+
+            // Compatibilidad por si Gemini devuelve { "questions": [...] }
+            if (is_array($result) && isset($result["questions"]) && is_array($result["questions"])) {
+                $result = $result["questions"];
+            }
+
+            // Validación básica del resultado
+            if (!is_array($result) || count($result) === 0) {
+                throw new Exception("La IA no devolvió un array de preguntas");
+            }
+
+            foreach ($result as $i => $q) {
+                if (!isset($q["OPCIONES"]) || !is_array($q["OPCIONES"]) || count($q["OPCIONES"]) !== 3) {
+                    throw new Exception("Pregunta #" . ($i + 1) . " no tiene 3 opciones");
+                }
+
+                $correct = 0;
+                foreach ($q["OPCIONES"] as $opt) {
+                    if (!empty($opt["ES_CORRECTA"])) $correct++;
+                }
+                if ($correct !== 1) {
+                    throw new Exception("Pregunta #" . ($i + 1) . " no tiene exactamente 1 opción correcta");
+                }
+            }
+
+            // (por ahora) Solo devolver JSON al front
+            Response::json2(200, "Preguntas generadas con Gemini AI exitosamente", $result);
+        } catch (Exception $e) {
+            Response::json2(500, "Error de Gemini AI: " . $e->getMessage(), null);
         }
     }
 }

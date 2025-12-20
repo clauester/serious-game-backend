@@ -1,10 +1,13 @@
 <?php
+
 declare(strict_types=1);
 require_once __DIR__ . '/../Controllers/QuestionController.php';
 
-class QuestionRoutes {
+class QuestionRoutes
+{
 
-    public static function handle(string $cleanUri, string $method): bool {
+    public static function handle(string $cleanUri, string $method): bool
+    {
         $controller = new QuestionController();
 
         // POST /questions/upload-csv - Endpoint para cargar CSV y obtener JSON
@@ -15,13 +18,13 @@ class QuestionRoutes {
 
         // POST /questions -> opcional, lista preguntas
         if ($cleanUri === "/questions/upload2" && $method === "POST") {
-             $controller->uploadCsv(); // si implementas listado
+            $controller->uploadCsv(); // si implementas listado
             return true;
         }
 
         // GET /questions -> opcional, lista preguntas
         if ($cleanUri === "/questions/all" && $method === "GET") {
-             $controller->findAll(); // si implementas listado
+            $controller->findAll(); // si implementas listado
             return true;
         }
 
@@ -33,8 +36,10 @@ class QuestionRoutes {
         }
         // GET /questions/stats/id -> obtener estadísticas de preguntas por grupo
         // null when id is all
-        if (preg_match("#^/questions/stats/group/(all|[0-9a-fA-F-]{36})$#", $cleanUri, $matches)
-            && $method === "GET") {
+        if (
+            preg_match("#^/questions/stats/group/(all|[0-9a-fA-F-]{36})$#", $cleanUri, $matches)
+            && $method === "GET"
+        ) {
 
             $controller->getQuestionStats($matches[1]);
             return true;
@@ -46,6 +51,11 @@ class QuestionRoutes {
         //     // $controller->getById($matches[1]);
         //     return true;
         // }
+
+        if ($cleanUri === '/questions/ai/generate'  && $method === 'POST') {
+            $controller->generateWithAI();
+            return true;
+        }
 
         return false;
     }
