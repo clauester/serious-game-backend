@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 require_once __DIR__ . '/../Controllers/UserController.php';
@@ -8,9 +9,11 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Credentials: true");
 
-class UserRoutes {
+class UserRoutes
+{
 
-    public static function handle(string $uri, string $method): bool {
+    public static function handle(string $uri, string $method): bool
+    {
         $controller = new UserController();
 
         // GET /users
@@ -25,7 +28,7 @@ class UserRoutes {
             return true;
         }
 
-        if($uri === "/users/roles" && $method === "GET"){
+        if ($uri === "/users/roles" && $method === "GET") {
             $controller->getAllRoles();
             return true;
         }
@@ -47,10 +50,17 @@ class UserRoutes {
             $controller->update($matches[1]);
             return true;
         }
-        if($uri === "/users/statuses" && $method === "GET"){
+        if ($uri === "/users/statuses" && $method === "GET") {
             $controller->getAllStatuses();
             return true;
         }
+
+        // GET /users/profile?userId={uuid}
+        if ($uri === "/users/profile" && $method === "GET") {
+            $controller->getProfile($_GET['userId'] ?? null);
+            return true;
+        }
+
 
         return false; // no coincidió ninguna ruta
     }
