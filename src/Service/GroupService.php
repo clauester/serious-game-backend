@@ -22,4 +22,18 @@ class GroupService {
         return $this->repo->getGroupQuestions($groupId);
     }
 
+    public function getQuestionsToAdd($accion, $group_id, $question_id) {
+        return $this->repo->getQuestionsToAdd($accion, $group_id, $question_id);
+    }
+
+    public function addQuestionToGroup($groupId, $questionIds, $deleteIds) {
+        // Lógica para agregar una pregunta a un grupo
+        return $this->repo->registerGroupQuestions($groupId, $questionIds, $deleteIds);
+    }
+    public function deactivateGroup($groupId) {
+        // Lógica para desactivar el grupo (cambiar su estado a inactivo)
+        // Aquí llamarías a tu repositorio
+        return $this->repo->deactivateGroup($groupId);
+    }
+
 }

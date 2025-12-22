@@ -26,6 +26,34 @@ class GroupRoutes {
             return true;
         }
 
+        // POST /groups/{groupId}/questions/to-add - Endpoint para obtener preguntas para agregar a un grupo
+        if($cleanUri === "/groups/questions/to-add" && $method === "POST") {
+            $data = json_decode(file_get_contents("php://input"), true);
+            $accion = $data["accion_name"];
+            $group_id = $data["group_id"];
+            $question_id = $data["question_id"];
+            $controller->getQuestionsToAdd($accion, $group_id, $question_id);
+            return true;
+        }
+
+        // POST /groups/questions/add - Endpoint para agregar preguntas a un grupo
+        if($cleanUri === "/groups/questions/add" && $method === "POST") {
+            $data = json_decode(file_get_contents("php://input"), true);
+            $group_id = $data["groupId"];
+            $question_id = $data["questionIds"];
+            $delelete_id = $data["deleteIds"] ?? [];
+            $controller->addQuestionToGroup($group_id, $question_id, $delelete_id);
+            return true;
+        }
+
+        // PUT /groups/delete/{groupId}- Endpoint para cambiar status a inactive
+        if( preg_match('/^\/groups\/delete\/([a-f0-9\-]+)$/', $cleanUri, $matches) && $method === "PUT") {
+            $groupId = $matches[1];
+            $controller->deactivateGroup($groupId);
+            return true;
+        }   
+
+
         return false;
     }
 }
