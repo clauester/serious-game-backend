@@ -20,6 +20,37 @@ class GroupService {
 
     public function getGroupQuestions($groupId) {
         return $this->repo->getGroupQuestions($groupId);
+
+    }
+
+    public function getAllGroupQuestions($groupId) {
+        $rows = $this->repo->getAllGroupQuestions($groupId);
+
+        $questions = [];
+
+        foreach ($rows as $row) {
+
+            $id = $row["id"];
+
+            if (!isset($questions[$id])) {
+                $questions[$id] = [
+                    "id" => $row["id"],
+                    "title" => $row["title"],
+                    "description" => $row["description"],
+                    "type" => $row["type"],
+                    "tip_note" => $row["tip_note"],
+                    "created_on" => $row["created_on"],
+                    "options" => []
+                ];
+            }
+
+            $questions[$id]["options"][] = [
+                "text_option" => $row["text_option"],
+                "is_correct" => (int)$row["is_correct"]
+            ];
+        }
+
+        return array_values($questions);
     }
 
     public function getQuestionsToAdd($accion, $group_id, $question_id) {

@@ -27,6 +27,11 @@ class GroupController {
         Response::json2(200, 'Preguntas del grupo obtenidas exitosamente', $result);
     }
 
+    public function getAllQuestions($groupId) {
+        $result = $this->service->getAllGroupQuestions($groupId);
+        Response::json2(200, 'Preguntas del grupo obtenidas exitosamente', $result);
+    }
+
     public function getQuestionsToAdd($accion, $group_id, $question_id) {
         $result = $this->service->getQuestionsToAdd($accion, $group_id, $question_id);
         Response::json2(200, 'Preguntas para agregar obtenidas exitosamente', $result);

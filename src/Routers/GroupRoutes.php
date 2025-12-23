@@ -26,6 +26,13 @@ class GroupRoutes {
             return true;
         }
 
+        //GET all group questions by id 
+        if( preg_match('/^\/groups\/([a-f0-9\-]+)\/questions\/all$/', $cleanUri, $matches) && $method === "GET") {
+            $groupId = $matches[1];
+            $controller->getAllQuestions($groupId);
+            return true;
+        }
+
         // POST /groups/{groupId}/questions/to-add - Endpoint para obtener preguntas para agregar a un grupo
         if($cleanUri === "/groups/questions/to-add" && $method === "POST") {
             $data = json_decode(file_get_contents("php://input"), true);
