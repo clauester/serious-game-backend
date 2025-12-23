@@ -269,4 +269,14 @@ class QuestionController
             Response::json2(500, "Error de Gemini AI: " . $e->getMessage(), null);
         }
     }
+
+    public function deactivateQuestion(string $questionId): void
+    {
+        try {
+            $this->questionService->deactivateQuestion($questionId);
+            Response::json2(200, 'Pregunta desactivada exitosamente', null);
+        } catch (Exception $e) {
+            Response::json2(500, 'Error al desactivar la pregunta: ' . $e->getMessage(), null);
+        }
+    }
 }

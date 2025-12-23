@@ -84,6 +84,11 @@ class QuestionService
         return $this->repo->getQuestionStats($id);
     }
 
+    public function deactivateQuestion(string $questionId): void
+    {
+        $this->repo->deactivateQuestion($questionId);
+    }
+
     // public function update($data, $id) {
     //     return $this->repo->updateUser(
     //         $id,

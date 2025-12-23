@@ -173,4 +173,14 @@ private function questionExistsByTitle(string $title): bool
     return $exists;
 }
 
+    public function deactivateQuestion(string $questionId)
+    {
+        $stmt = $this->pdo->prepare('CALL sp_delete_question(:p_question_id)');
+        $stmt->bindParam(':p_question_id', $questionId, PDO::PARAM_STR);
+        $stmt->execute();
+        
+        $stmt->closeCursor();
+        return $stmt->fetch();
+    }
+
 }

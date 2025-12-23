@@ -57,6 +57,13 @@ class QuestionRoutes
             return true;
         }
 
+        //chage question status to deleted
+        if (preg_match("#^/questions/delete/([0-9a-fA-F-]{36})$#", $cleanUri, $matches)
+            && $method === "PUT") {
+            $controller->deactivateQuestion($matches[1]);
+            return true;
+        }
+
         return false;
     }
 }
