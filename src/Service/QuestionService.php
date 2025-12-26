@@ -33,6 +33,7 @@ class QuestionService
                     "type" => $row["type"],
                     "tip_note" => $row["tip_note"],
                     "created_on" => $row["created_on"],
+                    "ai_generated" => $row["ai_generated"],
                     "options" => []
                 ];
             }
@@ -99,5 +100,18 @@ class QuestionService
     //         $data["status_id"]
     //     );
     // }
+
+    public function saveAiQuestions(array $questions): array
+    {
+        // Add AI_GENERATED flag to each question
+        $questionsWithAiFlag = array_map(function($question) {
+        $question['AI_GENERATED'] = 1;
+        
+        return $question;
+
+        }, $questions);
+    
+        return $this->repo->createQuestion($questionsWithAiFlag);
+    }
 
 }

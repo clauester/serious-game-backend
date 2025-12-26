@@ -263,8 +263,11 @@ class QuestionController
                 }
             }
 
+             $data = $this->questionService->saveAiQuestions($result);
+            
+
             // (por ahora) Solo devolver JSON al front
-            Response::json2(200, "Preguntas generadas con Gemini AI exitosamente", $result);
+            Response::json2(200, "Preguntas generadas con Gemini AI exitosamente", $data);
         } catch (Exception $e) {
             Response::json2(500, "Error de Gemini AI: " . $e->getMessage(), null);
         }

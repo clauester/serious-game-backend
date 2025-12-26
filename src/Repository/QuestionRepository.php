@@ -31,7 +31,7 @@ class QuestionRepository {
         try {
             // 2. Preparar Sentencias (usando el ID_TEMPORAL del array como parámetro)
             $stmt_pregunta = $this->pdo->prepare(
-                "CALL serius_game_periodontitits.sp_create_question(?, ?, ?, ?)"
+                "CALL serius_game_periodontitits.sp_create_question(?, ?, ?, ?, ?)"
             );
             
             $stmt_opcion = $this->pdo->prepare(
@@ -54,8 +54,10 @@ class QuestionRepository {
                     //$pregunta['ID_PREGUNTA_UNICA'], // ID temporal
                     $titulo,
                     $pregunta['DESCRIPCION_PREGUNTA'],
-                    $pregunta['TIPO_PREGUNTA_ID'],
-                    $pregunta['NOTA_CONSEJO']
+                   // $pregunta['TIPO_PREGUNTA_ID'],
+                    "multiple_option",
+                    $pregunta['NOTA_CONSEJO'],
+                    $pregunta['AI_GENERATED'] ?? 0
                 ];
 
                 // A. **Ejecución 1:** Guardar la Pregunta principal

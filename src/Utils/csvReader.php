@@ -59,7 +59,7 @@ class CsvReader
                 'ID_PREGUNTA_UNICA' => $id,
                 'TITULO_PREGUNTA' => $fila['TITULO_PREGUNTA'],
                 'DESCRIPCION_PREGUNTA' => $fila['DESCRIPCION_PREGUNTA'],
-                'TIPO_PREGUNTA_ID' => $fila['TIPO_PREGUNTA_ID'],
+                //'TIPO_PREGUNTA_ID' => $fila['TIPO_PREGUNTA_ID'],
                 'NOTA_CONSEJO' => $fila['NOTA_CONSEJO'],
                 'OPCIONES' => [] // Array vacío para almacenar las opciones
             ];
