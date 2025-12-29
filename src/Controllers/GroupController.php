@@ -13,7 +13,7 @@ class GroupController {
 
     public function createGroup() {
         $data = json_decode(file_get_contents("php://input"), true);
-        $result = $this->service->createGroup($data["code"], $data["name"], $data["description"]);
+        $result = $this->service->createGroup($data["code"], $data["name"], $data["description"], $data["created_by"]);
         Response::json2( 201, 'Grupo creado exitosamente', $result);
     }
 

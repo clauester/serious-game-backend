@@ -10,8 +10,8 @@ class GroupService {
         $this->repo = new GroupRepository();
     }
 
-    public function createGroup($code, $name, $description) {
-        return $this->repo->createGroup($code, $name, $description);
+    public function createGroup($code, $name, $description, $created_by) {
+        return $this->repo->createGroup($code, $name, $description, $created_by);
     }
 
     public function getAllGroups() {

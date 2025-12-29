@@ -12,12 +12,15 @@ class GroupRepository {
     public function createGroup(
         string $code,
         string $name,
-        string $description
+        string $description,
+        string $created_by
     ){
-        $stmt = $this->pdo->prepare("CALL sp_create_game_group(:p_name,:p_description, :p_code)");
+        $stmt = $this->pdo->prepare("CALL sp_create_game_group(:p_name,:p_description, :p_code, :p_created_by)");
         $stmt->bindParam(":p_code", $code);
         $stmt->bindParam(":p_name", $name);
         $stmt->bindParam(":p_description", $description);
+        $stmt->bindValue(":p_created_by", $created_by); // Ajusta según sea necesario
+
         $stmt->execute();
 
         return $stmt->fetch(); // tu SP debe retornar el nuevo grupo usuario
