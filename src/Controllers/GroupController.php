@@ -77,4 +77,17 @@ class GroupController {
 
         Response::json2(200, 'Grupo desactivado exitosamente', null);
     }
+
+   public function getGroupByCode($groupCode) {
+        try {
+            $result = $this->service->getGroupByCode($groupCode);
+            Response::json2(200, 'Grupo obtenido exitosamente', $result);
+            
+        } catch (RuntimeException $e) {
+            Response::json2(400, $e->getMessage(), null);
+            
+        } catch (Throwable $e) {
+            Response::json2(500, 'Error interno del servidor', null);
+        }
+    }
 }

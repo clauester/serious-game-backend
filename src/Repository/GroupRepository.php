@@ -15,60 +15,127 @@ class GroupRepository {
         string $description,
         string $created_by
     ){
-        $stmt = $this->pdo->prepare("CALL sp_create_game_group(:p_name,:p_description, :p_code, :p_created_by)");
-        $stmt->bindParam(":p_code", $code);
-        $stmt->bindParam(":p_name", $name);
-        $stmt->bindParam(":p_description", $description);
-        $stmt->bindValue(":p_created_by", $created_by); // Ajusta según sea necesario
+        try {
+            $stmt = $this->pdo->prepare("CALL sp_create_game_group(:p_name,:p_description, :p_code, :p_created_by)");
+            $stmt->bindParam(":p_code", $code);
+            $stmt->bindParam(":p_name", $name);
+            $stmt->bindParam(":p_description", $description);
+            $stmt->bindValue(":p_created_by", $created_by);
 
-        $stmt->execute();
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
 
-        return $stmt->fetch(); // tu SP debe retornar el nuevo grupo usuario
+            return $result;
+            
+        } catch (PDOException $e) {
+            if ($e->getCode() === '45000') {
+                throw new RuntimeException($e->getMessage());
+            }
+            
+            throw new RuntimeException(
+                'Error al crear el grupo: ' . $e->getMessage(),
+                0,
+                $e
+            );
+        }
     }
 
 
     public function getAllGroups() {
-        $stmt = $this->pdo->prepare("CALL sp_list_game_groups()");
-        $stmt->execute();
-        $groups = $stmt->fetchAll();
-        $stmt->closeCursor();
+        try {
+            $stmt = $this->pdo->prepare("CALL sp_list_game_groups()");
+            $stmt->execute();
+            $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
 
-        return $groups;
+            return $groups;
+            
+        } catch (PDOException $e) {
+            if ($e->getCode() === '45000') {
+                throw new RuntimeException($e->getMessage());
+            }
+            
+            throw new RuntimeException(
+                'Error al obtener la lista de grupos: ' . $e->getMessage(),
+                0,
+                $e
+            );
+        }
     }
 
     //get group questions by group id
     public function getGroupQuestions($groupId) {
-        $stmt = $this->pdo->prepare("CALL sp_get_group_questions(:p_id)");
-        $stmt->bindParam(":p_id", $groupId);
-        $stmt->execute();
-        $questions = $stmt->fetchAll();
-        $stmt->closeCursor();
+        try {
+            $stmt = $this->pdo->prepare("CALL sp_get_group_questions(:p_id)");
+            $stmt->bindParam(":p_id", $groupId);
+            $stmt->execute();
+            $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
 
-        return $questions;
+            return $questions;
+            
+        } catch (PDOException $e) {
+            if ($e->getCode() === '45000') {
+                throw new RuntimeException($e->getMessage());
+            }
+            
+            throw new RuntimeException(
+                'Error al obtener las preguntas del grupo: ' . $e->getMessage(),
+                0,
+                $e
+            );
+        }
     }
 
     public function getAllGroupQuestions($groupId) {
-        $stmt = $this->pdo->prepare("CALL sp_get_all_group_questions(:p_id)");
-        $stmt->bindParam(":p_id", $groupId);
-        $stmt->execute();
-        $questions = $stmt->fetchAll();
-        $stmt->closeCursor();
+        try {
+            $stmt = $this->pdo->prepare("CALL sp_get_all_group_questions(:p_id)");
+            $stmt->bindParam(":p_id", $groupId);
+            $stmt->execute();
+            $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
 
-        return $questions;
+            return $questions;
+            
+        } catch (PDOException $e) {
+            if ($e->getCode() === '45000') {
+                throw new RuntimeException($e->getMessage());
+            }
+            
+            throw new RuntimeException(
+                'Error al obtener todas las preguntas del grupo: ' . $e->getMessage(),
+                0,
+                $e
+            );
+        }
     }
 
     //get group questions by group id
     public function getQuestionsToAdd($accion, $group_id, $question_id) {
-        $stmt = $this->pdo->prepare("CALL sp_question_group_accion(:accion_name, :p_group_id, :p_question_id)");
-        $stmt->bindParam(":accion_name", $accion);
-        $stmt->bindParam(":p_group_id", $group_id);
-        $stmt->bindParam(":p_question_id", $question_id);
+        try {
+            $stmt = $this->pdo->prepare("CALL sp_question_group_accion(:accion_name, :p_group_id, :p_question_id)");
+            $stmt->bindParam(":accion_name", $accion);
+            $stmt->bindParam(":p_group_id", $group_id);
+            $stmt->bindParam(":p_question_id", $question_id);
 
-        $stmt->execute();
-        $questions = $stmt->fetchAll();
-        $stmt->closeCursor();
+            $stmt->execute();
+            $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
 
-        return $questions;
+            return $questions;
+            
+        } catch (PDOException $e) {
+            if ($e->getCode() === '45000') {
+                throw new RuntimeException($e->getMessage());
+            }
+            
+            throw new RuntimeException(
+                'Error al obtener preguntas para agregar: ' . $e->getMessage(),
+                0,
+                $e
+            );
+        }
     }
 
     //insert array of questions to group
@@ -115,14 +182,56 @@ class GroupRepository {
     }
 }
 
-public function deactivateGroup(string $groupId)
+    public function getGroupByCode(string $groupCode)
     {
-        $stmt = $this->pdo->prepare('CALL sp_delete_group(:p_group_id)');
-        $stmt->bindParam(':p_group_id', $groupId, PDO::PARAM_STR);
-        $stmt->execute();
-        
-        $stmt->closeCursor();
-        return $stmt->fetch();
+        try {
+            $stmt = $this->pdo->prepare('CALL sp_get_group_by_code(:p_group_code)');
+            $stmt->bindParam(':p_group_code', $groupCode, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            $groupData = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+            
+            return $groupData;
+            
+        } catch (PDOException $e) {
+            if ($e->getCode() === '45000') {
+                $msg = $e->errorInfo[2] ?? $e->getMessage();
+                throw new RuntimeException($msg);
+            }
+            
+            throw new RuntimeException(
+                'Error al obtener el grupo por código: ' . $e->getMessage(),
+                0,
+                $e
+            );
+        }
+    }
+
+    public function deactivateGroup(string $groupId)
+    {
+        try {
+            $stmt = $this->pdo->prepare('CALL sp_delete_group(:p_group_id)');
+            $stmt->bindParam(':p_group_id', $groupId, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+            
+            return $result;
+            
+        } catch (PDOException $e) {
+            if ($e->getCode() === '45000') {
+                $msg = $e->errorInfo[2] ?? $e->getMessage();
+                throw new RuntimeException($msg);
+            }
+            
+            throw new RuntimeException(
+                'Error al desactivar el grupo: ' . $e->getMessage(),
+                0,
+                $e
+            );
+        }
     }
 
 }

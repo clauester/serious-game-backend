@@ -58,7 +58,14 @@ class GroupRoutes {
             $groupId = $matches[1];
             $controller->deactivateGroup($groupId);
             return true;
-        }   
+        }
+
+        // get group by code
+        if( preg_match('/^\/groups\/code\/([a-z0-9]+)$/', $cleanUri, $matches) && $method === "GET") {
+            $groupCode = $matches[1];
+            $controller->getGroupByCode($groupCode);
+            return true;
+        }
 
 
         return false;

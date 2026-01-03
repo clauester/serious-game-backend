@@ -61,6 +61,11 @@ class GroupService {
         // Lógica para agregar una pregunta a un grupo
         return $this->repo->registerGroupQuestions($groupId, $questionIds, $deleteIds);
     }
+
+    public function getGroupByCode($groupCode) {
+        return $this->repo->getGroupByCode($groupCode);
+    }
+
     public function deactivateGroup($groupId) {
         // Lógica para desactivar el grupo (cambiar su estado a inactivo)
         // Aquí llamarías a tu repositorio

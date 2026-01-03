@@ -24,7 +24,7 @@ class GameService {
         ?string $gameId
         ) {
         // Lógica para crear un juego
-        return $this->repo->createGame($action, $gameId, $user_id, $group_id, $status, $grade);
+        return $this->repo->createGame($action, $user_id, $group_id, $status, $grade, $gameId);
     }
 
 }

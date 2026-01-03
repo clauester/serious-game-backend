@@ -40,11 +40,11 @@ class GameRepository {
 
     public function createGame(
         string $action,
-        ?string $gameId,
         ?string $user_id,
         ?string $group_id,
         ?string $status,
         ?int $grade,
+        ?string $gameId
         
     ) {
         $stmt = $this->pdo->prepare("CALL sp_game_crud(?, ?, ?, ?, ?, ?, ?, ?)");
