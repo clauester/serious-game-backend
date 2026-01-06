@@ -125,11 +125,12 @@ class QuestionController
             $data = json_decode(file_get_contents("php://input"), true);
 
             $result = $this->questionService->saveUserAnswer(
-                $data['answer_id'],
+                $data['answer_id'] ?? null,
                 $data['group_id'],
                 $data['user_id'],
                 $data['question_id'],
-                $data['q_option_id']
+                $data['q_option_id'],
+                $data['game_id']
             );
 
             $this->response->json2(200, 'Respuesta guardada correctamente', $result);

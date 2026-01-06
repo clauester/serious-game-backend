@@ -47,14 +47,16 @@ class QuestionService
         return array_values($questions);
     }
 
-    public function saveUserAnswer($answerId, $groupId, $userId, $questionId, $qOptionId)
+    public function saveUserAnswer(?string  $answerId, $groupId, $userId, $questionId, $qOptionId, $gameId)
     {
         return $this->repo->saveUserAnswerOption(
             $answerId,
             $groupId,
             $userId,
             $questionId,
-            $qOptionId
+            $qOptionId,
+            $gameId
+            
         );
     }
 

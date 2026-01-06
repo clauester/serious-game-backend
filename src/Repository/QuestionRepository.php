@@ -126,20 +126,22 @@ class QuestionRepository {
     }
 
     public function saveUserAnswerOption(
-        string $answerId,
+        ?string $answerId,
         string $groupId,
         string $userId,
         string $questionId,
-        ?string $qOptionId
+        ?string $qOptionId,
+        ?string $gameId
     ): array {
-        $stmt = $this->pdo->prepare("CALL sp_register_user_answer(?, ?, ?, ?, ?)");
+        $stmt = $this->pdo->prepare("CALL sp_register_user_answer(?, ?, ?, ?, ?, ?)");
         
         $stmt->execute([
             $answerId,
             $groupId,
             $userId,
             $questionId,
-            $qOptionId
+            $qOptionId,
+            $gameId
         ]);
         
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
