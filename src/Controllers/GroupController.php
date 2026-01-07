@@ -3,74 +3,80 @@
 require_once __DIR__ . '/../Service/GroupService.php';
 require_once __DIR__ . '/../Utils/Response.php';
 
-class GroupController {
+class GroupController
+{
 
     private $service;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->service = new GroupService();
     }
 
-    public function createGroup() {
+    public function createGroup()
+    {
         $data = json_decode(file_get_contents("php://input"), true);
         $result = $this->service->createGroup($data["code"], $data["name"], $data["description"], $data["created_by"]);
-        Response::json2( 201, 'Grupo creado exitosamente', $result);
+        Response::json2(201, 'Grupo creado exitosamente', $result);
     }
 
-    public function getAllGroups() {
+    public function getAllGroups()
+    {
         $result = $this->service->getAllGroups();
         Response::json2(200, 'Grupos obtenidos exitosamente', $result);
     }
 
-    public function getGroupQuestions($groupId) {
+    public function getGroupQuestions($groupId)
+    {
         $result = $this->service->getGroupQuestions($groupId);
         Response::json2(200, 'Preguntas del grupo obtenidas exitosamente', $result);
     }
 
-    public function getAllQuestions($groupId) {
+    public function getAllQuestions($groupId)
+    {
         $result = $this->service->getAllGroupQuestions($groupId);
         Response::json2(200, 'Preguntas del grupo obtenidas exitosamente', $result);
     }
 
-    public function getQuestionsToAdd($accion, $group_id, $question_id) {
+    public function getQuestionsToAdd($accion, $group_id, $question_id)
+    {
         $result = $this->service->getQuestionsToAdd($accion, $group_id, $question_id);
         Response::json2(200, 'Preguntas para agregar obtenidas exitosamente', $result);
     }
 
-   public function addQuestionToGroup($groupId, $questionIds, $deleteIds)
-{
-    try {
-        $result = $this->service->addQuestionToGroup(
-            $groupId,
-            $questionIds,
-            $deleteIds
-        );
+    public function addQuestionToGroup($groupId, $questionIds, $deleteIds)
+    {
+        try {
+            $result = $this->service->addQuestionToGroup(
+                $groupId,
+                $questionIds,
+                $deleteIds
+            );
 
-        Response::json2(
-            200,
-            'Preguntas agregadas al grupo exitosamente',
-            $result
-        );
+            Response::json2(
+                200,
+                'Preguntas agregadas al grupo exitosamente',
+                $result
+            );
+        } catch (RuntimeException $e) {
 
-    } catch (RuntimeException $e) {
+            Response::json2(
+                409, // conflicto lógico
+                $e->getMessage(),
+                null
+            );
+        } catch (Throwable $e) {
 
-        Response::json2(
-            409, // conflicto lógico
-            $e->getMessage(),
-            null
-        );
-
-    } catch (Throwable $e) {
-
-        Response::json2(
-            500,
-            'Error interno del servidor',
-            null
-        );
+            Response::json2(
+                500,
+                'Error interno del servidor',
+                null
+            );
+        }
     }
-}
 
-    public function deactivateGroup($groupId) {
+    public function deactivateGroup($groupId)
+    {
         // Lógica para desactivar el grupo (cambiar su estado a inactivo)
         // Aquí llamarías a tu modelo o servicio
         $result = $this->service->deactivateGroup($groupId);
@@ -78,14 +84,27 @@ class GroupController {
         Response::json2(200, 'Grupo desactivado exitosamente', null);
     }
 
-   public function getGroupByCode($groupCode) {
+    public function getGroupByCode($groupCode)
+    {
         try {
+            // normalizar a mayúsculas y eliminar espacios del código recibido
+            $groupCode = strtoupper(trim((string)$groupCode));
+
+            if ($groupCode === '') {
+                Response::json2(400, 'Código de grupo no proporcionado', null);
+                return;
+            }
+
+            if (strlen($groupCode) !== 6) {
+                Response::json2(400, 'Código de grupo no cumple la longitud requerida', null);
+                return;
+            }
+
             $result = $this->service->getGroupByCode($groupCode);
+
             Response::json2(200, 'Grupo obtenido exitosamente', $result);
-            
         } catch (RuntimeException $e) {
             Response::json2(400, $e->getMessage(), null);
-            
         } catch (Throwable $e) {
             Response::json2(500, 'Error interno del servidor', null);
         }
