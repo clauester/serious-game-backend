@@ -45,6 +45,7 @@ class GroupService {
             }
 
             $questions[$id]["options"][] = [
+                "option_id" => $row["option_id"],
                 "text_option" => $row["text_option"],
                 "is_correct" => (int)$row["is_correct"]
             ];
