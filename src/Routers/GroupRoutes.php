@@ -1,13 +1,16 @@
 <?php
+
 declare(strict_types=1);
 require_once __DIR__ . '/../Controllers/GroupController.php';
 
-class GroupRoutes {
+class GroupRoutes
+{
 
-    public static function handle(string $cleanUri, string $method): bool {
+    public static function handle(string $cleanUri, string $method): bool
+    {
         $controller = new GroupController();
 
-         // POST /group/save - Endpoint para cargar CSV y obtener JSON
+        // POST /group/save - Endpoint para cargar CSV y obtener JSON
         if ($cleanUri === "/groups" && $method === "GET") {
             $controller->getAllGroups();
             return true;
@@ -27,14 +30,14 @@ class GroupRoutes {
         }
 
         //GET all group questions by id 
-        if( preg_match('/^\/groups\/([a-f0-9\-]+)\/questions\/all$/', $cleanUri, $matches) && $method === "GET") {
+        if (preg_match('/^\/groups\/([a-f0-9\-]+)\/questions\/all$/', $cleanUri, $matches) && $method === "GET") {
             $groupId = $matches[1];
             $controller->getAllQuestions($groupId);
             return true;
         }
 
         // POST /groups/{groupId}/questions/to-add - Endpoint para obtener preguntas para agregar a un grupo
-        if($cleanUri === "/groups/questions/to-add" && $method === "POST") {
+        if ($cleanUri === "/groups/questions/to-add" && $method === "POST") {
             $data = json_decode(file_get_contents("php://input"), true);
             $accion = $data["accion_name"];
             $group_id = $data["group_id"];
@@ -44,7 +47,7 @@ class GroupRoutes {
         }
 
         // POST /groups/questions/add - Endpoint para agregar preguntas a un grupo
-        if($cleanUri === "/groups/questions/add" && $method === "POST") {
+        if ($cleanUri === "/groups/questions/add" && $method === "POST") {
             $data = json_decode(file_get_contents("php://input"), true);
             $group_id = $data["groupId"];
             $question_id = $data["questionIds"];
@@ -54,14 +57,14 @@ class GroupRoutes {
         }
 
         // PUT /groups/delete/{groupId}- Endpoint para cambiar status a inactive
-        if( preg_match('/^\/groups\/delete\/([a-f0-9\-]+)$/', $cleanUri, $matches) && $method === "PUT") {
+        if (preg_match('/^\/groups\/delete\/([a-f0-9\-]+)$/', $cleanUri, $matches) && $method === "PUT") {
             $groupId = $matches[1];
             $controller->deactivateGroup($groupId);
             return true;
         }
 
         // get group by code
-        if( preg_match('/^\/groups\/code\/([a-z0-9]+)$/', $cleanUri, $matches) && $method === "GET") {
+        if (preg_match('/^\/groups\/code\/([A-Za-z0-9]+)$/', $cleanUri, $matches) && $method === "GET") {
             $groupCode = $matches[1];
             $controller->getGroupByCode($groupCode);
             return true;
