@@ -171,8 +171,8 @@ class QuestionController
         }
     }
 
-
-    // prueba de generación preguntas en json con IA
+    /*
+    // Generación preguntas en json con IA (version anterior 15-01-26)
     public function generateWithAI(): void
     {
         $body = json_decode(file_get_contents("php://input"), true) ?? [];
@@ -264,15 +264,221 @@ class QuestionController
                 }
             }
 
-             $data = $this->questionService->saveAiQuestions($result);
-            
+            $data = $this->questionService->saveAiQuestions($result);
 
-            // (por ahora) Solo devolver JSON al front
+
+            // devolver JSON al front
             Response::json2(200, "Preguntas generadas con Gemini AI exitosamente", $data);
         } catch (Exception $e) {
             Response::json2(500, "Error de Gemini AI: " . $e->getMessage(), null);
         }
+    } */
+
+    // Generación de preguntas en json con IA (Gemini)
+    public function generateWithAI(): void
+    {
+        $body = json_decode(file_get_contents("php://input"), true) ?? [];
+
+        $count = (int)($body["count"] ?? 5);
+        $difficulty = $body["difficulty"] ?? "baja"; // baja|media|alta
+        $lang = strtolower(trim((string)($body["lang"] ?? "es"))); // es|en
+
+        if (!in_array($lang, ["es", "en"], true)) {
+            Response::json2(400, "language no válido (es|en)", null);
+            return;
+        }
+
+        if ($count < 2 || $count > 10) {
+            Response::json2(400, "cantidad debe estar entre 5 y 10", null);
+            return;
+        }
+        if (!in_array($difficulty, ["baja", "media", "alta"], true)) {
+            Response::json2(400, "dificultad no válida (baja|media|alta)", null);
+            return;
+        }
+        // ejes temáticos según idioma
+        $axesByLang = [
+            "es" => [
+                "Conceptos de periodontitis",
+                "Factores de riesgo y causas principales",
+                "Síntomas de alerta y consecuencias",
+                "Medidas preventivas",
+            ],
+            "en" => [
+                "Periodontitis concepts",
+                "Risk factors and main causes",
+                "Warning signs and consequences",
+                "Preventive measures",
+            ],
+        ];
+
+        $axes = $axesByLang[$lang]; // set de ejes según idioma
+
+        $base = intdiv($count, count($axes));
+        $rem  = $count % count($axes);
+
+        $distribution = [];
+        foreach ($axes as $idx => $axis) {
+            $distribution[$axis] = $base + ($idx < $rem ? 1 : 0);
+        }
+
+        // Generar detalle de la distribución
+        $distribDetail = "";
+        foreach ($distribution as $axis => $n) {
+            if ($n > 0) { // no listar ejes con 0
+                $distribDetail .= "- {$axis}: {$n} preguntas\n";
+            }
+        }
+
+        $languageRule = ($lang === "en")
+            ? "- Write ALL texts in English (neutral).\n"
+            : "- Redacta TODO en Español (neutral).\n";
+
+        // Schema del formato que se requiere recibir de Gemini AI
+        $schema = [
+            "type" => "array",
+            "minItems" => $count,
+            "maxItems" => $count,
+            "items" => [
+                "type" => "object",
+                "properties" => [
+                    "EJE" => [ // eje temático
+                        "type" => "string",
+                        "enum" => $axes // ejes segun idioma
+                    ],
+                    "TITULO_PREGUNTA" => ["type" => "string", "minLength" => 10, "maxLength" => 50],
+                    "DESCRIPCION_PREGUNTA" => ["type" => "string", "minLength" => 10, "maxLength" => 150],
+                    "NOTA_CONSEJO" => ["type" => "string", "minLength" => 15, "maxLength" => 75],
+                    "OPCIONES" => [
+                        "type" => "array",
+                        "minItems" => 4,
+                        "maxItems" => 4, // fijo a 4
+                        "items" => [
+                            "type" => "object",
+                            "properties" => [
+                                "TEXTO_OPCION" => ["type" => "string", "minLength" => 10, "maxLength" => 100],
+                                "ES_CORRECTA" => ["type" => "boolean"],
+                            ],
+                            "required" => ["TEXTO_OPCION", "ES_CORRECTA"],
+                            //"additionalProperties" => false
+                        ]
+                    ],
+                    "RETROALIMENTACION" => ["type" => "string", "minLength" => 40, "maxLength" => 170],
+                ],
+                "required" => ["EJE", "TITULO_PREGUNTA", "DESCRIPCION_PREGUNTA", "NOTA_CONSEJO", "OPCIONES", "RETROALIMENTACION"],
+                //"additionalProperties" => false
+            ]
+        ];
+
+
+        // Prompt base 
+        $prompt =
+            "Genera {$count} preguntas tipo test para concientizar sobre periodontitis.\n" .
+            "Dificultad: {$difficulty}.\n" .
+            "Formato de salida: DEVUELVE SOLO un JSON válido cuyo valor raíz sea un ARRAY [].\n" .
+            "Ejes temáticos y distribución OBLIGATORIA (respeta exactamente estas cantidades):\n" .
+            "{$distribDetail}\n" .
+            "Cada elemento del array es un objeto con: EJE (debe ser exactamente uno de los ejes listados), TITULO_PREGUNTA, DESCRIPCION_PREGUNTA, NOTA_CONSEJO, OPCIONES, RETROALIMENTACION.\n" .
+            "Reglas:\n" .
+            "- TITULO_PREGUNTA es un texto breve que categoriza la pregunta.\n" .
+            "- DESCRIPCION_PREGUNTA es el enunciado completo de la pregunta.\n" .
+            "- NOTA_CONSEJO es un texto breve tipo pista que ayuda a guiar a la opción correcta sin revelar la respuesta ni ser demasiado obvio.\n" .
+            "- OPCIONES debe tener EXACTAMENTE 4 elementos.\n" .
+            "- EXACTAMENTE 1 opción con ES_CORRECTA=TRUE (boolean real).\n" .
+            $languageRule .
+            "- El campo EJE debe estar en el mismo idioma indicado.\n" .
+            "- RETROALIMENTACION: mensaje informativo que explica la respuesta correcta y amplía el aprendizaje.\n" .
+            "- No debe indicar si el usuario acertó o falló (NO usar frases como 'Correcto', 'Incorrecto', '¡Bien!', 'Fallaste', 'Tu respuesta', etc.).\n" .
+            "- No juzgues ni regañes; tono educativo, claro y neutral.\n" .
+            "- RETROALIMENTACION debe ser coherente con la opción marcada como correcta (ES_CORRECTA=true) y NO debe revelar la respuesta de forma explícita tipo 'La respuesta es la opción X'.\n" .
+            "- No incluyas tratamientos o términos clínicos avanzados.\n" .
+            "- No repitas preguntas ni opciones demasiado parecidas.\n" .
+            "- No uses markdown, no agregues texto fuera del JSON.\n";
+
+        try {
+            require_once __DIR__ . '/../Service/GeminiAIService.php';
+            $client = new GeminiAIService();
+            $result = $client->generateJson($prompt, $schema);
+
+            // Compatibilidad por si Gemini devuelve { "questions": [...] }
+            if (is_array($result) && isset($result["questions"]) && is_array($result["questions"])) {
+                $result = $result["questions"];
+            }
+
+            // Validación básica del resultado
+            if (!is_array($result) || count($result) === 0) {
+                throw new Exception("La IA no devolvió un array de preguntas");
+            }
+
+            $counts = array_fill_keys(array_keys($distribution), 0); // iniciar contador segun ejes
+
+            foreach ($result as $i => $q) {
+                $axis = $q["EJE"] ?? null;
+                if (!isset($distribution[$axis])) {
+                    throw new Exception("Pregunta #" . ($i + 1) . " tiene un eje inválido o faltante");
+                }
+                $counts[$axis]++;
+            }
+
+            foreach ($distribution as $axis => $expected) {
+                if ($counts[$axis] !== $expected) {
+                    throw new Exception("Distribución por eje incorrecta en '{$axis}'. Esperado {$expected}, obtenido {$counts[$axis]}");
+                }
+            }
+
+            foreach ($result as $i => $q) {
+                if (!isset($q["OPCIONES"]) || !is_array($q["OPCIONES"]) || count($q["OPCIONES"]) !== 4) {
+                    throw new Exception("Pregunta #" . ($i + 1) . " no tiene 4 opciones");
+                }
+
+                // Validar RETROALIMENTACION
+                if (!isset($q["RETROALIMENTACION"]) || !is_string($q["RETROALIMENTACION"])) {
+                    throw new Exception("Pregunta #" . ($i + 1) . " no tiene RETROALIMENTACION válida");
+                }
+
+
+                $correct = 0;
+                foreach ($q["OPCIONES"] as $j => $opt) {
+                    if (!array_key_exists("ES_CORRECTA", $opt)) {
+                        throw new Exception("Pregunta #" . ($i + 1) . " opción #" . ($j + 1) . " no tiene campo ES_CORRECTA");
+                    }
+
+                    if (!is_bool($opt["ES_CORRECTA"])) {
+                        throw new Exception("Pregunta #" . ($i + 1) . " opción #" . ($j + 1) . " debe ser booleana (true/false)");
+                    }
+
+                    if ($opt["ES_CORRECTA"] === true) {
+                        $correct++;
+                    }
+                }
+
+                if ($correct !== 1) {
+                    throw new Exception("Pregunta #" . ($i + 1) . " no tiene exactamente 1 opción correcta");
+                }
+            }
+
+
+            foreach ($result as &$q) { // agregar campo lang al resultado
+                $q["LANG"] = $lang; // "es" o "en"
+            }
+            unset($q);
+
+            /* foreach ($result as &$q) { // quitar campo eje (temporal)
+                unset($q["EJE"]);
+            }
+            unset($q); */
+
+            // guardar preguntas generadas
+            //$data = $this->questionService->saveAiQuestions($result);
+
+
+            // devolver JSON al front
+            Response::json2(200, "Preguntas generadas con Gemini AI exitosamente", $result);
+        } catch (Exception $e) {
+            Response::json2(500, "Error de Gemini AI: " . $e->getMessage(), null);
+        }
     }
+
 
     public function deactivateQuestion(string $questionId): void
     {
