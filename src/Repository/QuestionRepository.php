@@ -46,10 +46,17 @@ class QuestionRepository
             foreach ($preguntasArray as $pregunta) {
 
                 $titulo = trim($pregunta['TITULO_PREGUNTA']);
+                $pregunta_desc = trim($pregunta['DESCRIPCION_PREGUNTA']);
 
-                // Evita duplicados por título
-                if ($this->questionExistsByTitle($titulo)) {
-                    $skipped[] = $titulo;
+                // // Evita duplicados por título
+                // if ($this->questionExistsByTitle($titulo)) {
+                //     $skipped[] = $titulo;
+                //     continue;
+                // }
+
+                // Evita duplicados por descripción (contenido de la pregunta)
+                if ($this->questionExistsByDescription($pregunta_desc)) {
+                    $skipped[] = $pregunta_desc; // o $titulo si no se requiere el detalle de la pregunta
                     continue;
                 }
 
@@ -171,15 +178,42 @@ class QuestionRepository
         return $data;
     }
 
-
+    /*
     // Comprueba si ya existe una pregunta con el mismo título
     private function questionExistsByTitle(string $title): bool
     {
-        // Ajusta el nombre de la tabla y columna si difieren
+        
         $stmt = $this->pdo->prepare("SELECT id FROM question WHERE title = ? LIMIT 1");
         $stmt->execute([$title]);
         $exists = (bool) $stmt->fetchColumn();
         $stmt->closeCursor();
+        return $exists;
+    }*/
+
+    // comprobar si ya existe una pregunta con el mismo contenido (descripción)
+    private function questionExistsByDescription(string $description): bool
+    {
+        $description = trim($description);
+
+        // Si la descripción viene vacía, no se considera existente
+        if ($description === '') {
+            return false;
+        }
+
+        $sql = "
+        SELECT 1
+        FROM question
+        WHERE status = 'active'
+          AND description IS NOT NULL
+          AND description = ?
+        LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$description]);
+
+        $exists = (bool) $stmt->fetchColumn();
+        $stmt->closeCursor();
+
         return $exists;
     }
 
