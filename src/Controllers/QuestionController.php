@@ -469,11 +469,11 @@ class QuestionController
             unset($q); */
 
             // guardar preguntas generadas
-            //$data = $this->questionService->saveAiQuestions($result);
+            $data = $this->questionService->saveAiQuestions($result);
 
 
-            // devolver JSON al front
-            Response::json2(200, "Preguntas generadas con Gemini AI exitosamente", $result);
+            // devolver JSON al front ($result para postman)
+            Response::json2(200, "Preguntas generadas con Gemini AI exitosamente", $data);
         } catch (Exception $e) {
             Response::json2(500, "Error de Gemini AI: " . $e->getMessage(), null);
         }
