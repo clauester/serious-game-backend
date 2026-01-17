@@ -53,7 +53,7 @@ class GeminiAIService
                 "responseSchema"   => $jsonSchema,   // <- schema usado
                 "candidateCount"   => 1,
                 "temperature"      => 0.4,
-                "maxOutputTokens"  => 3200
+                "maxOutputTokens"  => 3900
             ]
         ];
 

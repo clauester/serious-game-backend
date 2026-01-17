@@ -16,7 +16,8 @@ class QuestionService
         $this->response = new Response();
     }
 
-    public function findAll(){
+    public function findAll()
+    {
         $rows = $this->repo->getAllQuestions();
 
         $questions = [];
@@ -34,6 +35,8 @@ class QuestionService
                     "tip_note" => $row["tip_note"],
                     "created_on" => $row["created_on"],
                     "ai_generated" => $row["ai_generated"],
+                    "lang" => $row["lang"],
+                    "feedback" => $row["feedback"],
                     "options" => []
                 ];
             }
@@ -56,7 +59,7 @@ class QuestionService
             $questionId,
             $qOptionId,
             $gameId
-            
+
         );
     }
 
@@ -83,7 +86,8 @@ class QuestionService
         // );
     }
 
-    public function getQuestionStats($id) {
+    public function getQuestionStats($id)
+    {
         return $this->repo->getQuestionStats($id);
     }
 
@@ -106,14 +110,34 @@ class QuestionService
     public function saveAiQuestions(array $questions): array
     {
         // Add AI_GENERATED flag to each question
-        $questionsWithAiFlag = array_map(function($question) {
-        $question['AI_GENERATED'] = 1;
-        
-        return $question;
+        $questionsWithAiFlag = array_map(function ($question) {
+            $question['AI_GENERATED'] = 1;
 
+            return $question;
         }, $questions);
-    
+
         return $this->repo->createQuestion($questionsWithAiFlag);
     }
 
+    public function createNewQuestion(array $question): array
+    {
+        return $this->repo->createNewQuestion($question);
+    }
+
+    public function getById(string $questionId): array
+    {
+        return $this->repo->getQuestionById($questionId);
+    }
+
+    public function updateQuestion(
+        string $questionId,
+        string $title,
+        string $description,
+        string $tipNote,
+        string $lang,
+        string $feedback,
+        array $options
+    ): array {
+        return $this->repo->updateQuestion($questionId, $title, $description, $tipNote, $lang, $feedback, $options);
+    }
 }
