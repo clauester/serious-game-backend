@@ -118,4 +118,26 @@ class QuestionService
 
         return $this->repo->createQuestion($questionsWithAiFlag);
     }
+
+    public function createNewQuestion(array $question): array
+    {
+        return $this->repo->createNewQuestion($question);
+    }
+
+    public function getById(string $questionId): array
+    {
+        return $this->repo->getQuestionById($questionId);
+    }
+
+    public function updateQuestion(
+        string $questionId,
+        string $title,
+        string $description,
+        string $tipNote,
+        string $lang,
+        string $feedback,
+        array $options
+    ): array {
+        return $this->repo->updateQuestion($questionId, $title, $description, $tipNote, $lang, $feedback, $options);
+    }
 }

@@ -226,4 +226,171 @@ class QuestionRepository
         $stmt->closeCursor();
         return $stmt->fetch();
     }
+
+    public function createNewQuestion(array $question): array
+    {
+        $this->pdo->beginTransaction();
+
+        try {
+            $description = trim((string)($question['description'] ?? ''));
+
+            // evitar pregunta duplicada por su descripción (contenido)
+            if ($this->questionExistsByDescription($description)) {
+                $this->pdo->rollBack();
+                throw new \RuntimeException('Ya existe una pregunta similar en la base de datos.');
+            }
+
+            $stmt_pregunta = $this->pdo->prepare(
+                "CALL serius_game_periodontitits.sp_create_question(?, ?, ?, ?, ?, ?, ?)"
+            );
+
+            $stmt_opcion = $this->pdo->prepare(
+                "CALL serius_game_periodontitits.sp_create_question_option(?, ?, ?)"
+            );
+
+            $paramsPregunta = [
+                $question['title'],
+                $description,
+                "multiple_option", // <-- type_id por defecto
+                $question['tip_note'],
+                0, // <-- ai_generated
+                $question['lang'],
+                $question['feedback']
+            ];
+
+            if (!$stmt_pregunta->execute($paramsPregunta)) {
+                throw new \Exception('Fallo al ejecutar SP de Pregunta.');
+            }
+
+            $result_question_sp = $stmt_pregunta->fetch(PDO::FETCH_ASSOC);
+            if (empty($result_question_sp) || !isset($result_question_sp['id'])) {
+                throw new \Exception('El SP no devolvió el ID generado correctamente.');
+            }
+
+            $questionId = $result_question_sp['id'];
+            $stmt_pregunta->closeCursor();
+
+            $createdOptions = [];
+
+            foreach (($question['options'] ?? []) as $opt) {
+                $paramsOpt = [
+                    $questionId,
+                    $opt['text_option'],
+                    !empty($opt['is_correct']) ? 1 : 0 // convertir a 1 o 0
+                ];
+
+                if (!$stmt_opcion->execute($paramsOpt)) {
+                    throw new \Exception("Fallo al guardar Opción para Pregunta ID: $questionId");
+                }
+
+                $optRow = $stmt_opcion->fetch(PDO::FETCH_ASSOC);
+                $stmt_opcion->closeCursor();
+
+                if (!empty($optRow)) {
+                    $createdOptions[] = $optRow;
+                }
+            }
+
+            $this->pdo->commit();
+
+            return [
+                'question' => $result_question_sp,
+                'options' => $createdOptions
+            ];
+        } catch (\Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw new \Exception('Error al guardar nueva pregunta: ' . $e->getMessage(), (int)$e->getCode(), $e);
+        }
+    }
+
+    public function getQuestionById(string $questionId): array
+    {
+        $stmt = $this->pdo->prepare("CALL sp_get_question_by_id(?)");
+        $stmt->execute([$questionId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt->closeCursor();
+
+        if (empty($rows)) {
+            throw new RuntimeException("Pregunta no encontrada");
+        }
+
+        $q = [
+            "id" => $rows[0]["id"],
+            "title" => $rows[0]["title"],
+            "description" => $rows[0]["description"],
+            "tip_note" => $rows[0]["tip_note"],
+            "lang" => $rows[0]["lang"],
+            "feedback" => $rows[0]["feedback"],
+            "options" => []
+        ];
+
+        foreach ($rows as $r) {
+            $q["options"][] = [
+                "id" => $r["option_id"],
+                "text_option" => $r["text_option"],
+                "is_correct" => (int)$r["is_correct"]
+            ];
+        }
+
+        return $q;
+    }
+
+    public function updateQuestion(
+        string $questionId,
+        string $title,
+        string $description,
+        string $tipNote,
+        string $lang,
+        string $feedback,
+        array $options
+    ): array {
+        $this->pdo->beginTransaction();
+
+        try {
+
+            // evitar pregunta duplicada por su descripción (contenido)
+            /*if ($this->questionExistsByDescription($description)) {
+                $this->pdo->rollBack();
+                throw new \RuntimeException('Ya existe una pregunta similar en la base de datos.');
+            } 
+            */
+
+            //  Actualizar question (SIN ai_generated)
+            $stmtQ = $this->pdo->prepare("CALL sp_update_question(?, ?, ?, ?, ?, ?, ?)");
+            $stmtQ->execute([
+                $questionId,
+                $title,
+                $description,
+                "multiple_option", // type_id string (mapeo dentro del SP)
+                $tipNote,
+                $lang,
+                $feedback
+            ]);
+            $stmtQ->closeCursor();
+
+            // Actualizar opciones (SP 3 params)
+            $stmtO = $this->pdo->prepare("CALL sp_update_question_option(?, ?, ?)");
+
+            foreach ($options as $opt) {
+                $stmtO->execute([
+                    $opt["id"],
+                    $opt["text_option"],
+                    (int)$opt["is_correct"]
+                ]);
+                $stmtO->closeCursor();
+            }
+
+            $this->pdo->commit();
+
+            // Devuelve la pregunta actualizada (con option ids)
+            return $this->getQuestionById($questionId);
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
 }

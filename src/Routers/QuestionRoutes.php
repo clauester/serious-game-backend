@@ -57,12 +57,33 @@ class QuestionRoutes
             return true;
         }
 
-        //chage question status to deleted
-        if (preg_match("#^/questions/delete/([0-9a-fA-F-]{36})$#", $cleanUri, $matches)
-            && $method === "PUT") {
+        //change question status to deleted
+        if (
+            preg_match("#^/questions/delete/([0-9a-fA-F-]{36})$#", $cleanUri, $matches)
+            && $method === "PUT"
+        ) {
             $controller->deactivateQuestion($matches[1]);
             return true;
         }
+
+        // create question (manual)
+        if ($cleanUri === '/questions/create' && $method === 'POST') {
+            $controller->createNewQuestion();
+            return true;
+        }
+
+        // GET /questions/{uuid}
+        if (preg_match("#^/questions/([0-9a-fA-F-]{36})$#", $cleanUri, $matches) && $method === "GET") {
+            $controller->getById($matches[1]);
+            return true;
+        }
+
+        // PUT /questions/{uuid}
+        if (preg_match("#^/questions/([0-9a-fA-F-]{36})$#", $cleanUri, $matches) && $method === "PUT") {
+            $controller->updateQuestion($matches[1]);
+            return true;
+        }
+
 
         return false;
     }

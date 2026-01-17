@@ -489,4 +489,201 @@ class QuestionController
             Response::json2(500, 'Error al desactivar la pregunta: ' . $e->getMessage(), null);
         }
     }
+
+    public function createNewQuestion(): void
+    {
+        try {
+            $data = json_decode(file_get_contents("php://input"), true) ?? [];
+
+            $title = trim((string)($data['title'] ?? ''));
+            if ($title === '' || mb_strlen($title) > 100) {
+                Response::json2(400, 'Titulo invalido o excede longitud', null);
+                return;
+            }
+
+            $description = trim((string)($data['description'] ?? ''));
+            if ($description === '' || mb_strlen($description) > 255) {
+                Response::json2(400, 'Descripcion invalida o excede longitud', null);
+                return;
+            }
+
+            $tipNote = $data['tip_note'] ?? null;
+            if ($tipNote !== null) {
+                $tipNote = trim((string)$tipNote);
+                if ($tipNote === '') $tipNote = null;
+            }
+
+            $lang = strtolower(trim((string)($data['lang'] ?? '')));
+            if (!in_array($lang, ['es', 'en'], true)) {
+                Response::json2(400, 'lang no válido (es | en)', null);
+                return;
+            }
+
+            $feedback = $data['feedback'] ?? null;
+            if ($feedback !== null) {
+                $feedback = trim((string)$feedback);
+                if ($feedback === '') $feedback = null;
+            }
+
+            $options = $data['options'] ?? null;
+            if (!is_array($options) || count($options) !== 4) {
+                Response::json2(400, 'options contiene un número inválido de elementos', null);
+                return;
+            }
+
+            $correctCount = 0;
+            $cleanOptions = [];
+
+            foreach ($options as $idx => $opt) {
+                if (!is_array($opt)) {
+                    Response::json2(400, "formato inválido - options[$idx]", null);
+                    return;
+                }
+
+                $text = trim((string)($opt['text_option'] ?? ''));
+                if ($text === '' || mb_strlen($text) > 255) {
+                    Response::json2(400, "opcion de respuesta invalida o excede longitud - options[$idx]", null);
+                    return;
+                }
+
+                $isCorrect = (bool)($opt['is_correct'] ?? false);
+                if ($isCorrect) $correctCount++;
+
+                $cleanOptions[] = [
+                    'text_option' => $text,
+                    'is_correct' => $isCorrect
+                ];
+            }
+
+            if ($correctCount !== 1) {
+                Response::json2(400, 'la pregunta no tiene exactamente una opción correcta', null);
+                return;
+            }
+
+            $question = [
+                'title' => $title,
+                'description' => $description,
+                'tip_note' => $tipNote,
+                'lang' => $lang,
+                'feedback' => $feedback,
+                'options' => $cleanOptions
+            ];
+
+            $result = $this->questionService->createNewQuestion($question);
+            Response::json2(200, 'Pregunta creada exitosamente', $result);
+        } catch (RuntimeException $e) {
+            Response::json2(409, $e->getMessage(), null);
+        } catch (Exception $e) {
+            Response::json2(500, 'Error al crear la pregunta: ' . $e->getMessage(), null);
+        }
+    }
+
+    public function getById(string $questionId): void
+    {
+        try {
+            // Validar el ID antes de hacer la consulta
+            $questionId = trim($questionId);
+            if (!preg_match('/^[0-9a-fA-F-]{36}$/', $questionId)) {
+                Response::json2(400, 'ID de pregunta inválido', null);
+                return;
+            }
+
+            $result = $this->questionService->getById($questionId);
+
+            Response::json2(200, "Datos de pregunta obtenidos", $result);
+        } catch (RuntimeException $e) {
+            Response::json2(404, $e->getMessage(), null);
+        } catch (Throwable $e) {
+            Response::json2(500, "Error interno del servidor", null);
+        }
+    }
+
+    public function updateQuestion(string $questionId): void
+    {
+        try {
+            $data = json_decode(file_get_contents("php://input"), true) ?? [];
+
+            $title = trim((string)($data["title"] ?? ""));
+            $description = trim((string)($data["description"] ?? ""));
+            $tipNote = trim((string)($data["tip_note"] ?? ""));
+            $lang = strtolower(trim((string)($data["lang"] ?? "")));
+            $feedback = trim((string)($data["feedback"] ?? ""));
+
+            if ($title === "" || mb_strlen($title) > 100) {
+                Response::json2(400, "titulo invalido o excede longitud", null);
+                return;
+            }
+            if ($description === "" || mb_strlen($description) > 255) {
+                Response::json2(400, "descripcion invalida o excede longitud", null);
+                return;
+            }
+            if (!in_array($lang, ["es", "en"], true)) {
+                Response::json2(400, "lang no valido (es|en)", null);
+                return;
+            }
+
+            if ($tipNote === "") {
+                Response::json2(400, "tip note es invalido", null);
+                return;
+            }
+            if ($feedback === "") {
+                Response::json2(400, "feedback es invalido", null);
+                return;
+            }
+
+            $options = $data["options"] ?? null;
+            if (!is_array($options) || count($options) !== 4) {
+                Response::json2(400, "options contiene un numero invalido de elementos", null);
+                return;
+            }
+
+            $normalizedOptions = [];
+            $correctCount = 0;
+
+            foreach ($options as $i => $opt) {
+                $optId = trim((string)($opt["id"] ?? ""));
+                if (!preg_match("/^[0-9a-fA-F-]{36}$/", $optId)) {
+                    Response::json2(400, "id invalido de options[" . $i . "]", null);
+                    return;
+                }
+
+                $text = trim((string)($opt["text_option"] ?? ""));
+                if ($text === "" || mb_strlen($text) > 255) {
+                    Response::json2(400, "options[" . $i . "] no contiene texto válido o excede longitud", null);
+                    return;
+                }
+
+                $raw = $opt["is_correct"] ?? 0;
+                $isCorrect = ($raw === true || $raw === 1 || $raw === "1");
+                $correctCount += $isCorrect ? 1 : 0;
+
+                $normalizedOptions[] = [
+                    "id" => $optId,
+                    "text_option" => $text,
+                    "is_correct" => $isCorrect ? 1 : 0
+                ];
+            }
+
+            if ($correctCount !== 1) {
+                Response::json2(400, "debe haber exactamente 1 opcion correcta", null);
+                return;
+            }
+
+            $result = $this->questionService->updateQuestion(
+                $questionId,
+                $title,
+                $description,
+                $tipNote,
+                $lang,
+                $feedback,
+                $normalizedOptions
+            );
+
+            Response::json2(200, "Pregunta actualizada", $result);
+        } catch (RuntimeException $e) {
+            Response::json2(400, $e->getMessage(), null);
+        } catch (Throwable $e) {
+            Response::json2(500, "Error interno del servidor", null);
+        }
+    }
 }
