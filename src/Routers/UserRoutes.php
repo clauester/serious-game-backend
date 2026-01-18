@@ -61,6 +61,12 @@ class UserRoutes
             return true;
         }
 
+        // PUT /users/{uuid}/password
+        if (preg_match("#^/users/([0-9a-fA-F-]{36})/password$#", $uri, $matches) && $method === "PUT") {
+            $controller->updatePassword($matches[1]);
+            return true;
+        }
+
 
         return false; // no coincidió ninguna ruta
     }

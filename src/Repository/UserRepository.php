@@ -112,4 +112,19 @@ class UserRepository
 
         return $profileData ?: null;
     }
+
+    public function updateUserPassword(string $id, string $passwordHash): bool
+    {
+        $stmt = $this->pdo->prepare("CALL sp_update_user_password(:p_id, :p_password)");
+        $stmt->bindParam(":p_id", $id, PDO::PARAM_STR);
+        $stmt->bindParam(":p_password", $passwordHash, PDO::PARAM_STR);
+
+        $ok = $stmt->execute();
+
+        while ($stmt->nextRowset()) {
+        }
+        $stmt->closeCursor();
+
+        return (bool)$ok;
+    }
 }
