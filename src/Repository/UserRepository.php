@@ -16,8 +16,10 @@ class UserRepository
         $stmt = $this->pdo->prepare("CALL sp_get_user_by_id(:id)");
         $stmt->bindParam(":id", $id, PDO::PARAM_STR);
         $stmt->execute();
+        $user = $stmt->fetch();
+        $stmt->closeCursor();
 
-        return $stmt->fetch();
+        return $user;
     }
 
     public function getAllUsers($name,  $status_id)
@@ -119,12 +121,15 @@ class UserRepository
         $stmt->bindParam(":p_id", $id, PDO::PARAM_STR);
         $stmt->bindParam(":p_password", $passwordHash, PDO::PARAM_STR);
 
-        $ok = $stmt->execute();
+        $stmt->execute();
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         while ($stmt->nextRowset()) {
         }
         $stmt->closeCursor();
 
-        return (bool)$ok;
+        $affected = (int)($row["affected"] ?? 0);
+        return $affected === 1;
     }
 }

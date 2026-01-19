@@ -1,15 +1,18 @@
 <?php
 
 require_once __DIR__ . '/../Repository/UserRepository.php';
+require_once __DIR__ . '/../Utils/PasswordGenerator.php';
 
 class UserService
 {
 
     private $repo;
+    private PasswordGenerator $passwordGenerator;
 
     public function __construct()
     {
         $this->repo = new UserRepository();
+        $this->passwordGenerator = new PasswordGenerator();
     }
 
     public function findById($id)
@@ -78,7 +81,7 @@ class UserService
     public function updatePassword(string $userId, string $currentPass, string $newPass, ?string $confirmPass = null): void
     {
         $currentPassword = (string)$currentPass;
-        $newPassword     = (string)$newPass;
+        $newPassword = (string)$newPass;
 
 
         if ($confirmPass !== null && $newPassword !== $confirmPass) {
@@ -124,9 +127,56 @@ class UserService
         // hash de la nueva contraseña
         $hash = password_hash($newPassword, PASSWORD_BCRYPT);
 
-        $ok = $this->repo->updateUserPassword($userId, $hash);
+
+        try {
+            $ok = $this->repo->updateUserPassword($userId, $hash);
+        } catch (Throwable $e) {
+            // Mapear mensajes del SP
+            $msg = (string)$e->getMessage();
+
+            if (str_contains($msg, 'PASSWORD_REQUIRED')) {
+                throw new RuntimeException('SP: Nueva contraseña requerida');
+            }
+            throw $e;
+        }
+
         if (!$ok) {
             throw new RuntimeException("No se pudo actualizar la contraseña");
         }
+    }
+
+    public function resetPassword(string $userId): string
+    {
+        // generar password
+        try {
+            $plainPass = $this->passwordGenerator->generate(10);
+        } catch (Throwable $e) {
+            throw new RuntimeException("Fallo al generar la nueva contraseña");
+        }
+
+        // hash pass
+        $hashPass = password_hash($plainPass, PASSWORD_BCRYPT);
+
+        try {
+            $ok = $this->repo->updateUserPassword($userId, $hashPass);
+        } catch (Throwable $e) {
+            // Mapear mensajes del SP
+            $msg = (string)$e->getMessage();
+
+            if (str_contains($msg, 'USR_NOT_FOUND')) {
+                throw new RuntimeException('SP: Usuario no encontrado');
+            }
+            if (str_contains($msg, 'PASSWORD_REQUIRED')) {
+                throw new RuntimeException('SP: Nueva contraseña requerida');
+            }
+            throw $e;
+        }
+
+        if (!$ok) {
+            throw new RuntimeException('No se pudo restablecer la contraseña');
+        }
+
+        // clave en texto plano
+        return $plainPass;
     }
 }

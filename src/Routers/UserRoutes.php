@@ -67,6 +67,12 @@ class UserRoutes
             return true;
         }
 
+        // POST /users/{userId}/password/reset
+        if (preg_match("#^/users/([0-9a-fA-F-]{36})/password/reset$#", $uri, $matches) && $method === "POST") {
+            $controller->resetPassword($matches[1]);
+            return true;
+        }
+
 
         return false; // no coincidió ninguna ruta
     }

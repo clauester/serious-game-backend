@@ -141,4 +141,26 @@ class UserController
             Response::json2(500, 'Error interno del servidor', null);
         }
     }
+
+    public function resetPassword(string $userId): void
+    {
+        try {
+            if (!preg_match('/^[0-9a-fA-F-]{36}$/', $userId)) {
+                Response::json2(400, 'ID de usuario inválido', null);
+                return;
+            }
+
+
+            $plainPass = $this->service->resetPassword($userId);
+
+            Response::json2(200, 'Contraseña restablecida correctamente', [
+                "userId" => $userId,
+                "password" => $plainPass
+            ]);
+        } catch (RuntimeException $e) {
+            Response::json2(400, $e->getMessage(), null);
+        } catch (Throwable $e) {
+            Response::json2(500, 'Error interno del servidor', null);
+        }
+    }
 }
