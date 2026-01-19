@@ -56,6 +56,19 @@ class GroupRoutes
             return true;
         }
 
+        // GET /groups/search?q=... - Buscar grupos por nombre o descripción
+        if ($cleanUri === "/groups/search" && $method === "GET") {
+            $controller->searchGroups();
+            return true;
+        }
+
+        // PUT /groups/{groupId} - Endpoint para actualizar un grupo (campos pueden ser null)
+        if (preg_match('/^\/groups\/([a-f0-9\-]+)$/', $cleanUri, $matches) && $method === "PUT") {
+            $groupId = $matches[1];
+            $controller->updateGroup($groupId);
+            return true;
+        }
+
         // PUT /groups/delete/{groupId}- Endpoint para cambiar status a inactive
         if (preg_match('/^\/groups\/delete\/([a-f0-9\-]+)$/', $cleanUri, $matches) && $method === "PUT") {
             $groupId = $matches[1];

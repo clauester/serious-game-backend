@@ -73,4 +73,12 @@ class GroupService {
         return $this->repo->deactivateGroup($groupId);
     }
 
+    public function updateGroup($groupId, $name = null, $description = null, $code = null, $status = null) {
+        return $this->repo->updateGroup($groupId, $name, $description, $code, $status);
+    }
+
+    public function searchGroups($query, $status = null) {
+        return $this->repo->searchGroups($query, $status);
+    }
+
 }

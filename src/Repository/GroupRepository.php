@@ -64,6 +64,76 @@ class GroupRepository {
         }
     }
 
+    public function searchGroups(?string $query, ?string $status = null)
+    {
+        try {
+            $trimmed = $query === null ? null : trim($query);
+
+            // Si no se envía query
+            if ($trimmed === null || $trimmed === '') {
+                // Si tampoco se envía status, devolver todos
+                if ($status === null) {
+                    return $this->getAllGroups();
+                }
+
+                // Si se envía sólo status, devolver grupos con ese status
+                $sqlStatusOnly = "SELECT id, name, description, created_on, code, status, created_by
+                    FROM game_group
+                    WHERE status = :status
+                    ORDER BY created_on DESC";
+
+                $stmt = $this->pdo->prepare($sqlStatusOnly);
+                $stmt->bindValue(':status', $status, PDO::PARAM_STR);
+                $stmt->execute();
+                $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $stmt->closeCursor();
+
+                return $groups;
+            }
+
+            $sql = "SELECT id, name, description, created_on, code, status, created_by
+                    FROM game_group
+                    WHERE (name LIKE :q1 OR description LIKE :q2 or code LIKE :q3)";
+
+            // Si se especifica status, filtrar por él; si no, incluir tanto active como inactive
+            if ($status === null) {
+                $sql .= " AND status IN ('active','inactive')";
+            } else {
+                $sql .= " AND status = :status";
+            }
+
+            $sql .= " ORDER BY created_on DESC";
+
+            $stmt = $this->pdo->prepare($sql);
+
+            $like = '%' . $trimmed . '%';
+            $stmt->bindValue(':q1', $like, PDO::PARAM_STR);
+            $stmt->bindValue(':q2', $like, PDO::PARAM_STR);
+            $stmt->bindValue(':q3', $like, PDO::PARAM_STR);
+
+            if ($status !== null) {
+                $stmt->bindValue(':status', $status, PDO::PARAM_STR);
+            }
+
+            $stmt->execute();
+            $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+
+            return $groups;
+        } catch (PDOException $e) {
+            if ($e->getCode() === '45000') {
+                $msg = $e->errorInfo[2] ?? $e->getMessage();
+                throw new RuntimeException($msg);
+            }
+
+            throw new RuntimeException(
+                'Error al buscar grupos: ' . $e->getMessage(),
+                0,
+                $e
+            );
+        }
+    }
+
     //get group questions by group id
     public function getGroupQuestions($groupId) {
         try {
@@ -233,5 +303,48 @@ class GroupRepository {
             );
         }
     }
+
+ public function updateGroup(
+    string $groupId,
+    ?string $name,
+    ?string $description,
+    ?string $code,
+    ?string $status
+): bool {
+    try {
+        $stmt = $this->pdo->prepare(
+            'CALL sp_update_game_group(:p_id, :p_name, :p_description, :p_code, :p_status)'
+        );
+
+        $params = [
+            ':p_id' => [$groupId, PDO::PARAM_STR],
+            ':p_name' => [$name, $name === null ? PDO::PARAM_NULL : PDO::PARAM_STR],
+            ':p_description' => [$description, $description === null ? PDO::PARAM_NULL : PDO::PARAM_STR],
+            ':p_code' => [$code, $code === null ? PDO::PARAM_NULL : PDO::PARAM_STR],
+            ':p_status' => [$status, $status === null ? PDO::PARAM_NULL : PDO::PARAM_STR],
+        ];
+
+        foreach ($params as $key => [$value, $type]) {
+            $stmt->bindValue($key, $value, $type);
+        }
+
+        $stmt->execute();
+        $stmt->closeCursor();
+
+        return true;
+
+    } catch (PDOException $e) {
+        if ($e->getCode() === '45000') {
+            throw new RuntimeException($e->errorInfo[2] ?? $e->getMessage());
+        }
+
+        throw new RuntimeException(
+            'Error al actualizar el grupo: ' . $e->getMessage(),
+            0,
+            $e
+        );
+    }
+}
+
 
 }

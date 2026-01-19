@@ -26,6 +26,36 @@ class GroupController
         Response::json2(200, 'Grupos obtenidos exitosamente', $result);
     }
 
+    public function searchGroups()
+    {
+        try {
+            $q = $_GET['q'] ?? null;
+            $status = array_key_exists('status', $_GET) ? $_GET['status'] : null;
+
+            // Si no se envía 'q' o está vacío
+            if ($q === null || trim((string)$q) === '') {
+                // Si tampoco se envía status, devolver todos
+                if ($status === null) {
+                    $result = $this->service->getAllGroups();
+                    Response::json2(200, 'Todos los grupos obtenidos exitosamente', $result);
+                    return;
+                }
+
+                // Si se envía sólo status, devolver grupos con ese status
+                $result = $this->service->searchGroups(null, $status);
+                Response::json2(200, 'Grupos filtrados por status obtenidos exitosamente', $result);
+                return;
+            }
+
+            $result = $this->service->searchGroups($q, $status);
+            Response::json2(200, 'Grupos filtrados obtenidos exitosamente', $result);
+        } catch (RuntimeException $e) {
+            Response::json2(400, $e->getMessage(), null);
+        } catch (Throwable $e) {
+            Response::json2(500, 'Error interno del servidor', null);
+        }
+    }
+
     public function getGroupQuestions($groupId)
     {
         $result = $this->service->getGroupQuestions($groupId);
@@ -84,6 +114,26 @@ class GroupController
         Response::json2(200, 'Grupo desactivado exitosamente', null);
     }
 
+    public function updateGroup($groupId)
+    {
+        try {
+            $data = json_decode(file_get_contents("php://input"), true);
+
+            $name = array_key_exists('name', $data) ? $data['name'] : null;
+            $description = array_key_exists('description', $data) ? $data['description'] : null;
+            $code = array_key_exists('code', $data) ? $data['code'] : null;
+            $status = array_key_exists('status', $data) ? $data['status'] : null;
+
+            $this->service->updateGroup($groupId, $name, $description, $code, $status);
+
+            Response::json2(200, 'Grupo actualizado exitosamente', null);
+        } catch (RuntimeException $e) {
+            Response::json2(409, $e->getMessage(), null);
+        } catch (Throwable $e) {
+            Response::json2(500, 'Error interno del servidor', null);
+        }
+    }
+
     public function getGroupByCode($groupCode)
     {
         try {
@@ -101,6 +151,11 @@ class GroupController
             }
 
             $result = $this->service->getGroupByCode($groupCode);
+
+            if(empty($result)) {
+                Response::json2(404, 'Grupo no disponible', null);
+                return;
+            }
 
             Response::json2(200, 'Grupo obtenido exitosamente', $result);
         } catch (RuntimeException $e) {
