@@ -632,7 +632,7 @@ class QuestionController
             }
 
             $options = $data["options"] ?? null;
-            if (!is_array($options) || count($options) !== 4) {
+            if (!is_array($options) || count($options) < 2 || count($options) > 4) {
                 Response::json2(400, "options contiene un numero invalido de elementos", null);
                 return;
             }
