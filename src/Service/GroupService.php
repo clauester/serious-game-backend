@@ -40,6 +40,8 @@ class GroupService {
                     "type" => $row["type"],
                     "tip_note" => $row["tip_note"],
                     "created_on" => $row["created_on"],
+                    "feedback" => $row["feedback"],
+                    "lang" => $row["lang"],
                     "options" => []
                 ];
             }
