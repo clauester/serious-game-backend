@@ -67,23 +67,75 @@ class QuestionService
     {
         $arrayTransformed = $this->csvReader->rawToJson($data);
 
-        // // Devolver tipo y datos (ajusta según necesites)
-        // $this->response->json2(200, 'CSV leído correctamente', [
-        //     'csv_type' => "csvType",
-        //     'rows' => $arrayTransformed
-        // ]);
-        return $this->repo->createQuestion($arrayTransformed);
+        // validar integridad de preguntas y opciones antes de guardar
+        $validatedQuestionsData = [];
+        $idx = 0;
+        foreach ($arrayTransformed as $q) {
+            $idx++;
 
+            $title = trim((string)($q['TITULO_PREGUNTA'] ?? ''));
+            $description = trim((string)($q['DESCRIPCION_PREGUNTA'] ?? ''));
+            $tipNote = trim((string)($q['NOTA_CONSEJO'] ?? ''));
+            $lang = strtolower(trim((string)($q['LANG'] ?? '')));
+            $feedback = trim((string)($q['RETROALIMENTACION'] ?? ''));
 
+            if ($title === '' || mb_strlen($title) > 70) {
+                throw new InvalidArgumentException("Pregunta #{$idx} - titulo invalido");
+            }
+            if ($description === '' || mb_strlen($description) > 240) {
+                throw new InvalidArgumentException("Pregunta #{$idx} - descripcion invalida");
+            }
+            if ($tipNote === '' || mb_strlen($tipNote) > 150) {
+                throw new InvalidArgumentException("Pregunta #{$idx} - pista demasiado larga o vacía");
+            }
+            if ($lang === '' || !in_array($lang, ['es', 'en'], true)) {
+                throw new InvalidArgumentException("Pregunta #{$idx} - idioma inválido (es | en)");
+            }
+            if ($feedback === '' || mb_strlen($feedback) > 230) {
+                throw new InvalidArgumentException("Pregunta #{$idx} - retroalimentación demasiado larga o vacía");
+            }
 
+            // Opciones de respuesta
+            $options = $q['OPCIONES'] ?? null;
+            if (!is_array($options) || count($options) !== 4) {
+                throw new InvalidArgumentException("Pregunta #{$idx} no contiene 4 opciones de respuesta");
+            }
 
-        // return $this->repo->createUser(
-        //     $data["name"],
-        //     $data["email"],
-        //     $data["password"],
-        //     $data["rol_id"],
-        //     $data["status_id"]
-        // );
+            $cleanOptions = [];
+            $correctCount = 0;
+            foreach ($options as $j => $opt) {
+                $textOpt = trim((string)($opt['TEXTO_OPCION'] ?? ''));
+                if ($textOpt === '' || mb_strlen($textOpt) > 170) {
+                    throw new InvalidArgumentException("Pregunta #{$idx} opcion " . ($j + 1) . " vacía o demasiado larga");
+                }
+
+                $isCorrect = (bool)($opt['ES_CORRECTA'] ?? false);
+                if ($isCorrect) {
+                    $correctCount++;
+                }
+
+                $cleanOptions[] = [
+                    'TEXTO_OPCION' => $textOpt,
+                    'ES_CORRECTA' => $isCorrect,
+                ];
+            }
+
+            if ($correctCount !== 1) {
+                throw new InvalidArgumentException("Pregunta #{$idx} no contiene exactamente una opción correcta");
+            }
+
+            $validatedQuestionsData[] = [
+                'ID_PREGUNTA_UNICA' => $q['ID_PREGUNTA_UNICA'],
+                'TITULO_PREGUNTA' => $title,
+                'DESCRIPCION_PREGUNTA' => $description,
+                'NOTA_CONSEJO' => $tipNote === '' ? null : $tipNote,
+                'RETROALIMENTACION' => $feedback === '' ? null : $feedback,
+                'LANG' => $lang,
+                'OPCIONES' => $cleanOptions,
+            ];
+        }
+
+        return $this->repo->createQuestion($validatedQuestionsData);
     }
 
     public function getQuestionStats($id)

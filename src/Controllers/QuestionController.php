@@ -72,8 +72,6 @@ class QuestionController
         }
     }
 
-    // ...existing code...
-
     public function uploadCsv()
     {
         try {
@@ -112,7 +110,10 @@ class QuestionController
             // ]);
 
             $response = $this->questionService->create($data);
+
             $this->response->json2(200, 'Proceso completado', $response);
+        } catch (InvalidArgumentException $e) {
+            $this->response->json2(400, 'Error al procesar el CSV: ' . $e->getMessage(), null);
         } catch (Exception $e) {
             $this->response->json2(500, 'Error al procesar el CSV: ' . $e->getMessage());
             return false;
