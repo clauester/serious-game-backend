@@ -393,4 +393,67 @@ class QuestionRepository
             throw $e;
         }
     }
+
+    public function searchQuestions(?string $q, ?int $aiGenerated, ?string $lang): array
+    {
+        $sql = "
+        SELECT
+            q.id,
+            q.title,
+            q.description,
+            qt.type,
+            q.tip_note,
+            qo.text_option,
+            qo.is_correct,
+            q.created_on,
+            q.ai_generated,
+            q.lang,
+            q.feedback
+        FROM question q
+        JOIN question_option qo ON q.id = qo.question_id
+        JOIN question_type qt ON q.type_id = qt.id
+        WHERE q.status = 'active'
+    ";
+
+        $params = [];
+
+        // filtro q (title/description)
+        if ($q !== null && $q !== '') {
+            $sql .= " AND (q.title LIKE :term1 OR q.description LIKE :term2) ";
+            $searchQ = '%' . $q . '%';
+            $params[':term1'] = $searchQ;
+            $params[':term2'] = $searchQ;
+        }
+
+        // filtro ai_generated (0/1)
+        if ($aiGenerated !== null) {
+            $sql .= " AND q.ai_generated = :ai ";
+            $params[':ai'] = $aiGenerated;
+        }
+
+        // filtro lang (es/en)
+        if ($lang !== null && $lang !== '') {
+            $sql .= " AND q.lang = :lang ";
+            $params[':lang'] = $lang;
+        }
+
+        $sql .= " ORDER BY q.created_on DESC ";
+
+        $stmt = $this->pdo->prepare($sql);
+
+        // bind params con tipado, ai como int
+        foreach ($params as $k => $v) {
+            if ($k === ':ai') {
+                $stmt->bindValue($k, (int)$v, PDO::PARAM_INT);
+            } else {
+                $stmt->bindValue($k, (string)$v, PDO::PARAM_STR);
+            }
+        }
+
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt->closeCursor();
+
+        return $rows;
+    }
 }

@@ -72,6 +72,12 @@ class QuestionRoutes
             return true;
         }
 
+        // GET /questions/search? - obtener listado con filtros combinables
+        if ($cleanUri === '/questions/search' && $method === 'GET') {
+            $controller->searchQuestions();
+            return true;
+        }
+
         // GET /questions/{uuid}
         if (preg_match("#^/questions/([0-9a-fA-F-]{36})$#", $cleanUri, $matches) && $method === "GET") {
             $controller->getById($matches[1]);
