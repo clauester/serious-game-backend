@@ -192,4 +192,38 @@ class QuestionService
     ): array {
         return $this->repo->updateQuestion($questionId, $title, $description, $tipNote, $lang, $feedback, $options);
     }
+
+    public function searchQuestions(?string $q, ?int $ai, ?string $lang): array
+    {
+        $rows = $this->repo->searchQuestions($q, $ai, $lang);
+
+        $questions = [];
+
+        foreach ($rows as $row) {
+
+            $id = $row["id"];
+
+            if (!isset($questions[$id])) {
+                $questions[$id] = [
+                    "id" => $row["id"],
+                    "title" => $row["title"],
+                    "description" => $row["description"],
+                    "type" => $row["type"],
+                    "tip_note" => $row["tip_note"],
+                    "created_on" => $row["created_on"],
+                    "ai_generated" => $row["ai_generated"],
+                    "lang" => $row["lang"],
+                    "feedback" => $row["feedback"],
+                    "options" => []
+                ];
+            }
+
+            $questions[$id]["options"][] = [
+                "text_option" => $row["text_option"],
+                "is_correct" => (int)$row["is_correct"]
+            ];
+        }
+
+        return array_values($questions);
+    }
 }

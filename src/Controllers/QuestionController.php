@@ -687,4 +687,44 @@ class QuestionController
             Response::json2(500, "Error interno del servidor", null);
         }
     }
+
+    public function searchQuestions(): void
+    {
+        try {
+            // q: búsqueda por title/description (opcional)
+            $q = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
+            if ($q !== '' && mb_strlen($q) > 100) {
+                $this->response->json2(400, 'La búsqueda excede la longitud permitida', null);
+                return;
+            }
+            $q = ($q === '') ? null : $q;
+
+            // ai: all | 1 | 0 (opcional)
+            $aiRaw = isset($_GET['ai']) ? strtolower(trim((string)$_GET['ai'])) : 'all';
+            $ai = null;
+            if ($aiRaw !== '' && $aiRaw !== 'all') {
+                if (!in_array($aiRaw, ['0', '1'], true)) {
+                    $this->response->json2(400, 'ai no válido (all | 1 | 0)', null);
+                    return;
+                }
+                $ai = (int)$aiRaw; // 0 o 1
+            }
+
+            // lang: all | es | en (opcional)
+            $langRaw = isset($_GET['lang']) ? strtolower(trim((string)$_GET['lang'])) : 'all';
+            $lang = null;
+            if ($langRaw !== '' && $langRaw !== 'all') {
+                if (!in_array($langRaw, ['es', 'en'], true)) {
+                    $this->response->json2(400, 'lang no válido (all | es | en)', null);
+                    return;
+                }
+                $lang = $langRaw;
+            }
+
+            $questions = $this->questionService->searchQuestions($q, $ai, $lang);
+            $this->response->json2(200, 'Listado de preguntas (filtradas)', $questions);
+        } catch (Throwable $e) {
+            $this->response->json2(500, 'Error al filtrar preguntas: ' . $e->getMessage(), null);
+        }
+    }
 }
