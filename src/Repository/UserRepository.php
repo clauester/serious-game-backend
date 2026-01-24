@@ -22,11 +22,11 @@ class UserRepository
         return $user;
     }
 
-    public function getAllUsers($name,  $status_id)
+    public function getAllUsers($q,  $status_id)
     {
 
-        $stmt = $this->pdo->prepare("CALL sp_get_users(:p_name, :p_status_id)");
-        $stmt->bindValue(':p_name', $name, $name === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+        $stmt = $this->pdo->prepare("CALL sp_get_users(:p_q, :p_status_id)");
+        $stmt->bindValue(':p_q', $q, $q === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindValue(':p_status_id', $status_id, $status_id === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
 
         $stmt->execute();

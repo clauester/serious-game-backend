@@ -20,9 +20,9 @@ class UserService
         return $this->repo->getUserById($id);
     }
 
-    public function findAll($name, $status_id)
+    public function findAll($q, $status_id)
     {
-        return $this->repo->getAllUsers($name, $status_id);
+        return $this->repo->getAllUsers($q, $status_id);
     }
 
     function findAllRoles()

@@ -19,9 +19,9 @@ class UserController
         Response::json($result);
     }
 
-    public function getAll($name, $status_id)
+    public function getAll($q, $status_id)
     {
-        $result = $this->service->findAll($name, $status_id);
+        $result = $this->service->findAll($q, $status_id);
         Response::json($result);
     }
 

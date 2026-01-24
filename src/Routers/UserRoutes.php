@@ -18,7 +18,7 @@ class UserRoutes
 
         // GET /users
         if ($uri === "/users" && $method === "GET") {
-            $controller->getAll($_GET['name'] ?? null, $_GET['status'] ?? null);
+            $controller->getAll($_GET['q'] ?? null, $_GET['status'] ?? null);
             return true;
         }
 
