@@ -90,6 +90,12 @@ class QuestionRoutes
             return true;
         }
 
+        // GET /questions/template/download (descargar plantilla CSV)
+        if ($cleanUri === '/questions/template/download' && $method === "GET") {
+            $controller->downloadCsvTemplate();
+            return true;
+        }
+
 
         return false;
     }

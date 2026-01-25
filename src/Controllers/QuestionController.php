@@ -727,4 +727,57 @@ class QuestionController
             $this->response->json2(500, 'Error al filtrar preguntas: ' . $e->getMessage(), null);
         }
     }
+
+    public function downloadCsvTemplate(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $path = $root . '/resources/downloads/questions_template_v2.csv'; // ruta al archivo CSV plantilla
+
+        if (!is_file($path)) {
+            http_response_code(404);
+            echo "CSV template file not found";
+            return;
+        }
+
+        // evita que se imprima cualquier warning/notice en la salida del CSV
+        ini_set('display_errors', '0');
+
+        // limpiar buffers para evitar que se corrompa el archivo
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        $raw = file_get_contents($path);
+        if ($raw === false) {
+            http_response_code(500);
+            echo "Error reading CSV template file";
+            return;
+        }
+
+        // detectar encoding y convertir a UTF-8 si es necesario
+        $detected = mb_detect_encoding($raw, ['UTF-8', 'Windows-1252', 'ISO-8859-1'], true);
+        if ($detected && $detected !== 'UTF-8') {
+            $raw = mb_convert_encoding($raw, 'UTF-8', $detected);
+        }
+
+        // si el archivo ya trae BOM, se remueve para no duplicarlo
+        if (strncmp($raw, "\xEF\xBB\xBF", 3) === 0) {
+            $raw = substr($raw, 3);
+        }
+
+        $out = "\xEF\xBB\xBF" . $raw; // BOM + contenido
+
+        $downloadFileName = 'questions_template.csv';
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $downloadFileName . '"');
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        header('Content-Length: ' . strlen($out));
+
+        echo $out;
+        exit;
+    }
 }

@@ -1,0 +1,21 @@
+ID_PREGUNTA_UNICA;TITULO_PREGUNTA;DESCRIPCION_PREGUNTA;NOTA_CONSEJO;RETROALIMENTACION;IDIOMA;TEXTO_OPCION;ES_CORRECTA
+P001;Título o Categoría Pregunta 1;Contenido de la pregunta 1;Pista pregunta 1;Retroalimentacion pregunta 1 ;ES;Pregunta 1 Opcion 1;FALSE
+P001;Título o Categoría Pregunta 1;Contenido de la pregunta 1;Pista pregunta 1;Retroalimentacion pregunta 1 ;ES;Pregunta 1 Opcion 2;TRUE
+P001;Título o Categoría Pregunta 1;Contenido de la pregunta 1;Pista pregunta 1;Retroalimentacion pregunta 1 ;ES;Pregunta 1 Opcion 3;FALSE
+P001;Título o Categoría Pregunta 1;Contenido de la pregunta 1;Pista pregunta 1;Retroalimentacion pregunta 1 ;ES;Pregunta 1 Opcion 4;FALSE
+P002;Título o Categoría Pregunta 2;Contenido de la pregunta 2;Pista pregunta 2;Retroalimentacion pregunta 2;EN;Pregunta 2 Opcion 1;FALSE
+P002;Título o Categoría Pregunta 2;Contenido de la pregunta 2;Pista pregunta 2;Retroalimentacion pregunta 2;EN;Pregunta 2 Opcion 2;TRUE
+P002;Título o Categoría Pregunta 2;Contenido de la pregunta 2;Pista pregunta 2;Retroalimentacion pregunta 2;EN;Pregunta 2 Opcion 3;FALSE
+P002;Título o Categoría Pregunta 2;Contenido de la pregunta 2;Pista pregunta 2;Retroalimentacion pregunta 2;EN;Pregunta 2 Opcion 4;FALSE
+P003;Título o Categoría Pregunta 3;Contenido de la pregunta 3;Pista pregunta 3;Retroalimentacion pregunta 3;ES;Pregunta 3 Opcion 1;FALSE
+P003;Título o Categoría Pregunta 3;Contenido de la pregunta 3;Pista pregunta 3;Retroalimentacion pregunta 3;ES;Pregunta 3 Opcion 2;TRUE
+P003;Título o Categoría Pregunta 3;Contenido de la pregunta 3;Pista pregunta 3;Retroalimentacion pregunta 3;ES;Pregunta 3 Opcion 3;FALSE
+P003;Título o Categoría Pregunta 3;Contenido de la pregunta 3;Pista pregunta 3;Retroalimentacion pregunta 3;ES;Pregunta 3 Opcion 4;FALSE
+P004;Título o Categoría Pregunta 4;Contenido de la pregunta 4;Pista pregunta 4;Retroalimentacion pregunta 4;ES;Pregunta 4 Opcion 1;TRUE
+P004;Título o Categoría Pregunta 4;Contenido de la pregunta 4;Pista pregunta 4;Retroalimentacion pregunta 4;ES;Pregunta 4 Opcion 2;FALSE
+P004;Título o Categoría Pregunta 4;Contenido de la pregunta 4;Pista pregunta 4;Retroalimentacion pregunta 4;ES;Pregunta 4 Opcion 3;FALSE
+P004;Título o Categoría Pregunta 4;Contenido de la pregunta 4;Pista pregunta 4;Retroalimentacion pregunta 4;ES;Pregunta 4 Opcion 4;FALSE
+P005;Pregunta Ejemplo: Conceptos de periodontitis;¿Cuál de las siguientes enfermedades NO destruye el hueso que sostiene los dientes?;Una de ellas solamente inflama las encías;La gingivitis es reversible y afecta solo la encía. La periodontitis ocurre cuando la inflamación destruye el ligamento y el hueso;ES;Periodontitis;FALSE
+P005;Pregunta Ejemplo: Conceptos de periodontitis;¿Cuál de las siguientes enfermedades NO destruye el hueso que sostiene los dientes?;Una de ellas solamente inflama las encías;La gingivitis es reversible y afecta solo la encía. La periodontitis ocurre cuando la inflamación destruye el ligamento y el hueso;ES;Gingivitis;TRUE
+P005;Pregunta Ejemplo: Conceptos de periodontitis;¿Cuál de las siguientes enfermedades NO destruye el hueso que sostiene los dientes?;Una de ellas solamente inflama las encías;La gingivitis es reversible y afecta solo la encía. La periodontitis ocurre cuando la inflamación destruye el ligamento y el hueso;ES;Periodontitis y gingivitis;FALSE
+P005;Pregunta Ejemplo: Conceptos de periodontitis;¿Cuál de las siguientes enfermedades NO destruye el hueso que sostiene los dientes?;Una de ellas solamente inflama las encías;La gingivitis es reversible y afecta solo la encía. La periodontitis ocurre cuando la inflamación destruye el ligamento y el hueso;ES;Ninguna de las anteriores;FALSE
