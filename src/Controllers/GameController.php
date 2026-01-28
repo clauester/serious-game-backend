@@ -19,17 +19,39 @@ class GameController {
     }
 
     public function createGame(): void {
-        $data = json_decode(file_get_contents("php://input"), true);
-        $gameId = $data['game_id'] ?? null;
-        $action = $data['action'] ?? 'INS';
-        $user_id = $data['user_id'] ?? null;
-        $group_id = $data['group_id'] ?? null;
-        $status = $data['status'] ?? null;
-        $grade = (int)($data['grade'] ?? 0);
+        try{
 
-        $newGame = $this->service->createGame($action, $user_id, $group_id, $status, $grade, $gameId);
-        
-        Response::json2(201, 'Juego creado exitosamente', $newGame);
+            $data = json_decode(file_get_contents("php://input"), true);
+            $gameId = $data['game_id'] ?? null;
+            $action = $data['action'] ?? 'INS';
+            $user_id = $data['user_id'] ?? null;
+            $group_id = $data['group_id'] ?? null;
+            $status = $data['status'] ?? null;
+            $grade = (int)($data['grade'] ?? 0);
+            
+            $newGame = $this->service->createGame($action, $user_id, $group_id, $status, $grade, $gameId);
+            
+            Response::json2(201, 'Juego creado exitosamente', $newGame);
+            }catch (RuntimeException $e) {
+            
+            // Extraer solo el mensaje relevante del error de MySQL
+            $errorMessage = $e->getMessage();
+            if (preg_match('/GM_[A-Z_]+:.*/', $errorMessage, $matches)) {
+                $errorMessage = $matches[0];
+            }
+
+            Response::json2(
+                409, // conflicto lógico
+                $errorMessage,
+                null
+            );
+        } catch (Throwable $e) {
+            Response::json2(
+                500, // error interno del servidor
+                'Error interno del servidor',
+                null
+            );
+        }
     }
     
 }
