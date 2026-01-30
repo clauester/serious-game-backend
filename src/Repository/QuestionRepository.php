@@ -26,14 +26,14 @@ class QuestionRepository
     public function createQuestion(array $preguntasArray): array
     {
 
-        // 1. Iniciar la Transacción Única
+        // iniciar la Transacción
         $this->pdo->beginTransaction();
 
         $skipped = [];
         $created = 0;
 
         try {
-            // 2. Preparar Sentencias (usando el ID_TEMPORAL del array como parámetro)
+            // preparar Sentencias
             $stmt_pregunta = $this->pdo->prepare(
                 "CALL serius_game_periodontitits.sp_create_question(?, ?, ?, ?, ?, ?, ?)"
             );
@@ -42,7 +42,7 @@ class QuestionRepository
                 "CALL serius_game_periodontitits.sp_create_question_option(?, ?, ?)"
             );
 
-            // 3. Bucle Externo: Iterar sobre cada Pregunta
+            // iterar sobre cada Pregunta
             foreach ($preguntasArray as $pregunta) {
 
                 $titulo = trim($pregunta['TITULO_PREGUNTA']);
@@ -60,7 +60,7 @@ class QuestionRepository
                     continue;
                 }
 
-                // Mapeo para SP de Pregunta (ID_PREGUNTA_UNICA es el ID temporal o de negocio)
+                // Mapeo para SP de Pregunta
                 $parametros_pregunta = [
                     //$pregunta['ID_PREGUNTA_UNICA'], // ID temporal
                     $titulo,
@@ -73,49 +73,47 @@ class QuestionRepository
                     $pregunta['RETROALIMENTACION'] ?? null // si no se envia, null
                 ];
 
-                // A. **Ejecución 1:** Guardar la Pregunta principal
+                // 1 Guardar la Pregunta 
                 if (!$stmt_pregunta->execute($parametros_pregunta)) {
                     throw new \Exception("Fallo al ejecutar SP de Pregunta.");
                 }
 
-                // B. **Captura del ID Retornado**
-                // Asumimos que el SP devuelve una fila con el nuevo ID generado por la DB
+                // Captura del ID Retornado**
                 $resultado_sp = $stmt_pregunta->fetch(PDO::FETCH_ASSOC);
 
                 if (empty($resultado_sp) || !isset($resultado_sp['id'])) {
                     throw new \Exception("El SP no devolvió el ID generado correctamente.");
                 }
 
-                // C. Obtener el ID que usaremos como clave foránea
+                // Obtener ID a usar como clave foránea
                 $nuevo_id_generado = $resultado_sp['id'];
 
-                // D. Limpiar el resultado (IMPORTANTE en PDO al usar SPs que devuelven data)
-                // Esto libera el cursor para que podamos ejecutar la siguiente sentencia preparada
+                // limpiar el resultado 
                 $stmt_pregunta->closeCursor();
 
 
-                // 4. Bucle Interno: Iterar sobre las Opciones
+                // iterar sobre las Opciones
                 foreach ($pregunta['OPCIONES'] as $opcion) {
 
                     // Mapeo para SP de Opción
                     $parametros_opcion = [
-                        $nuevo_id_generado, // <-- ¡Usamos el ID generado aquí!
+                        $nuevo_id_generado, // id generado de la Pregunta
                         $opcion['TEXTO_OPCION'],
                         $opcion['ES_CORRECTA'] ? 1 : 0
                     ];
 
-                    // **Ejecución 2:** Guardar cada Opción
+                    // guardar cada Opción
                     if (!$stmt_opcion->execute($parametros_opcion)) {
                         throw new \Exception("Fallo al guardar Opción para Pregunta ID: $nuevo_id_generado");
                     }
 
-                    // Limpiar el resultado (necesario si el SP de opción también devuelve datos)
+                    // Limpiar el resultado 
                     $stmt_opcion->closeCursor();
                 }
                 $created++;
             }
 
-            // 5. Commit: Si todo el proceso fue exitoso
+            // si todo el proceso fue exitoso, commit
             $this->pdo->commit();
 
             return [
@@ -124,14 +122,13 @@ class QuestionRepository
                 'totalReceived' => count($preguntasArray)
             ];
         } catch (\PDOException $e) {
-            // 4. Revertir la Transacción (Rollback)
-            // Si ocurre cualquier error (Excepción), la base de datos revierte
-            // todos los cambios hechos desde beginTransaction().
+            // revertir la Transacción (Rollback)
+            // Si ocurre cualquier error (Excepción)
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
 
-            // Relanzar la excepción para que la capa de servicio la maneje
+            // relanzar la excepción
             throw new \Exception("Error al guardar datos: " . $e->getMessage(), (int)$e->getCode(), $e);
         }
     }
@@ -259,9 +256,9 @@ class QuestionRepository
             $paramsPregunta = [
                 $question['title'],
                 $description,
-                "multiple_option", // <-- type_id por defecto
+                "multiple_option", // type_id por defecto
                 $question['tip_note'],
-                0, // <-- ai_generated
+                0, //  ai_generated (no es AI)
                 $question['lang'],
                 $question['feedback']
             ];
@@ -365,20 +362,20 @@ class QuestionRepository
             } 
             */
 
-            //  Actualizar question (SIN ai_generated)
+            //  actualizar question (sin ai_generated))
             $stmtQ = $this->pdo->prepare("CALL sp_update_question(?, ?, ?, ?, ?, ?, ?)");
             $stmtQ->execute([
                 $questionId,
                 $title,
                 $description,
-                "multiple_option", // type_id string (mapeo dentro del SP)
+                "multiple_option", // type_id string
                 $tipNote,
                 $lang,
                 $feedback
             ]);
             $stmtQ->closeCursor();
 
-            // Actualizar opciones (SP 3 params)
+            // Actualizar opciones 
             $stmtO = $this->pdo->prepare("CALL sp_update_question_option(?, ?, ?)");
 
             foreach ($options as $opt) {
@@ -392,7 +389,7 @@ class QuestionRepository
 
             $this->pdo->commit();
 
-            // Devuelve la pregunta actualizada (con option ids)
+            // devolver la pregunta actualizada (con option ids)
             return $this->getQuestionById($questionId);
         } catch (Throwable $e) {
             if ($this->pdo->inTransaction()) {

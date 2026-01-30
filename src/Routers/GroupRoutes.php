@@ -10,13 +10,13 @@ class GroupRoutes
     {
         $controller = new GroupController();
 
-        // POST /group/save - Endpoint para cargar CSV y obtener JSON
+        // GET /groups - Endpoint para obtener todos los grupos
         if ($cleanUri === "/groups" && $method === "GET") {
             $controller->getAllGroups();
             return true;
         }
 
-        // POST /group/save - Endpoint para cargar CSV y obtener JSON
+        // POST /group/save - Endpoint para crear grupo
         if ($cleanUri === "/groups/save" && $method === "POST") {
             $controller->createGroup();
             return true;
@@ -56,7 +56,7 @@ class GroupRoutes
             return true;
         }
 
-        // GET /groups/search?q=... - Buscar grupos por nombre o descripción
+        // GET /groups/search?q=... - Buscar grupos por nombre o descripción y status
         if ($cleanUri === "/groups/search" && $method === "GET") {
             $controller->searchGroups();
             return true;

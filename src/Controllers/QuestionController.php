@@ -29,7 +29,7 @@ class QuestionController
     public function showCsvData(): void
     {
         try {
-            // 1) Si se subió un archivo por form-data (csv_file)
+            // si archivo por form-data (csv_file)
             if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] !== UPLOAD_ERR_NO_FILE) {
                 $file = $_FILES['csv_file'];
 
@@ -56,7 +56,7 @@ class QuestionController
                 return;
             }
 
-            // 2) Si se envía JSON con filePath en el body
+            // si se envía JSON con filePath en el body
             $input = json_decode(file_get_contents('php://input'), true);
             if (!is_array($input) || !isset($input['filePath']) || empty($input['filePath'])) {
                 $this->response->json2(400, 'El parámetro filePath es requerido en JSON o envíe csv_file en form-data');
@@ -75,7 +75,7 @@ class QuestionController
     public function uploadCsv()
     {
         try {
-            // Archivo enviado en form-data con key 'csv_file'
+            // Archivo enviado en form-data 
             if (!isset($_FILES['csv_file'])) {
                 $this->response->json2(400, 'No se recibió ningún archivo. Use la clave "csv_file" en form-data.');
                 return false;
@@ -88,14 +88,14 @@ class QuestionController
                 return false;
             }
 
-            // Validación simple de extensión
+            // validación de extensión
             $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
             if (strtolower($ext) !== 'csv') {
                 $this->response->json2(400, 'El archivo debe tener extensión .csv');
                 return false;
             }
 
-            // Campo adicional enviado en form-data: 'csv_type' (texto)
+            // Campo adicional enviado en form-data
             $csvType = $_POST['csv_type'] ?? null;
 
             $tmpPath = $file['tmp_name'];
@@ -103,11 +103,6 @@ class QuestionController
             // Leer CSV desde el archivo temporal
             $data = $this->csvReader->readCsv($tmpPath);
 
-            // // Devolver tipo y datos (ajusta según necesites)
-            // $this->response->json2(200, 'CSV leído correctamente', [
-            //     'csv_type' => $csvType,
-            //     'rows' => $data
-            // ]);
 
             $response = $this->questionService->create($data);
 
@@ -150,7 +145,7 @@ class QuestionController
         }
     }
 
-    // Helper para mensajes de error de subida
+    // helper para mensajes de error de subida
     private function fileUploadErrorMessage(int $code): string
     {
         switch ($code) {
@@ -172,115 +167,12 @@ class QuestionController
         }
     }
 
-    /*
-    // Generación preguntas en json con IA (version anterior 15-01-26)
-    public function generateWithAI(): void
-    {
-        $body = json_decode(file_get_contents("php://input"), true) ?? [];
-
-        $count = (int)($body["count"] ?? 5);
-        $difficulty = $body["difficulty"] ?? "baja"; // baja|media|alta
-
-        if ($count < 2 || $count > 25) {
-            Response::json2(400, "cantidad debe estar entre 5 y 25", null);
-            return;
-        }
-        if (!in_array($difficulty, ["baja", "media", "alta"], true)) {
-            Response::json2(400, "dificultad no válida (baja|media|alta)", null);
-            return;
-        }
-
-        // Schema del formato que se requiere recibir de Gemini AI
-        $schema = [
-            "type" => "array",
-            "minItems" => $count,
-            "maxItems" => $count,
-            "items" => [
-                "type" => "object",
-                "properties" => [
-                    "TITULO_PREGUNTA" => ["type" => "string", "minLength" => 10, "maxLength" => 50],
-                    "DESCRIPCION_PREGUNTA" => ["type" => "string", "minLength" => 10, "maxLength" => 150],
-                    "NOTA_CONSEJO" => ["type" => "string", "minLength" => 10, "maxLength" => 80],
-                    "OPCIONES" => [
-                        "type" => "array",
-                        "minItems" => 3,
-                        "maxItems" => 3, // fijo a 3
-                        "items" => [
-                            "type" => "object",
-                            "properties" => [
-                                "TEXTO_OPCION" => ["type" => "string", "minLength" => 3, "maxLength" => 90],
-                                "ES_CORRECTA" => ["type" => "boolean"],
-                            ],
-                            "required" => ["TEXTO_OPCION", "ES_CORRECTA"],
-                            //"additionalProperties" => false
-                        ]
-                    ],
-                ],
-                "required" => ["TITULO_PREGUNTA", "DESCRIPCION_PREGUNTA", "NOTA_CONSEJO", "OPCIONES"],
-                //"additionalProperties" => false
-            ]
-        ];
-
-
-        // Prompt base (luego se pule)
-        $prompt =
-            "Genera {$count} preguntas tipo test para concientizar sobre periodontitis.\n" .
-            "Dificultad: {$difficulty}.\n" .
-            "Formato de salida: DEVUELVE SOLO un JSON válido cuyo valor raíz sea un ARRAY [].\n" .
-            "Cada elemento del array es un objeto con: TITULO_PREGUNTA, DESCRIPCION_PREGUNTA, NOTA_CONSEJO, OPCIONES.\n" .
-            "Reglas:\n" .
-            "- TITULO_PREGUNTA es un texto breve que categoriza la pregunta.\n" .
-            "- DESCRIPCION_PREGUNTA es el enunciado completo de la pregunta.\n" .
-            "- NOTA_CONSEJO es un texto breve tipo pista para ayudar a responder.\n" .
-            "- OPCIONES debe tener EXACTAMENTE 3 elementos.\n" .
-            "- EXACTAMENTE 1 opción con ES_CORRECTA=TRUE.\n" .
-            "- No uses markdown, no agregues texto fuera del JSON.\n";
-
-        try {
-            require_once __DIR__ . '/../Service/GeminiAIService.php';
-            $client = new GeminiAIService();
-            $result = $client->generateJson($prompt, $schema);
-
-            // Compatibilidad por si Gemini devuelve { "questions": [...] }
-            if (is_array($result) && isset($result["questions"]) && is_array($result["questions"])) {
-                $result = $result["questions"];
-            }
-
-            // Validación básica del resultado
-            if (!is_array($result) || count($result) === 0) {
-                throw new Exception("La IA no devolvió un array de preguntas");
-            }
-
-            foreach ($result as $i => $q) {
-                if (!isset($q["OPCIONES"]) || !is_array($q["OPCIONES"]) || count($q["OPCIONES"]) !== 3) {
-                    throw new Exception("Pregunta #" . ($i + 1) . " no tiene 3 opciones");
-                }
-
-                $correct = 0;
-                foreach ($q["OPCIONES"] as $opt) {
-                    if (!empty($opt["ES_CORRECTA"])) $correct++;
-                }
-                if ($correct !== 1) {
-                    throw new Exception("Pregunta #" . ($i + 1) . " no tiene exactamente 1 opción correcta");
-                }
-            }
-
-            $data = $this->questionService->saveAiQuestions($result);
-
-
-            // devolver JSON al front
-            Response::json2(200, "Preguntas generadas con Gemini AI exitosamente", $data);
-        } catch (Exception $e) {
-            Response::json2(500, "Error de Gemini AI: " . $e->getMessage(), null);
-        }
-    } */
-
     // Generación de preguntas en json con IA (Gemini)
     public function generateWithAI(): void
     {
         $body = json_decode(file_get_contents("php://input"), true) ?? [];
 
-        $count = (int)($body["count"] ?? 5);
+        $count = (int)($body["count"] ?? 5); // cantidad de preguntas
         $difficulty = $body["difficulty"] ?? "baja"; // baja|media|alta
         $lang = strtolower(trim((string)($body["lang"] ?? "es"))); // es|en
 
@@ -297,7 +189,7 @@ class QuestionController
             Response::json2(400, "dificultad no válida (baja|media|alta)", null);
             return;
         }
-        // ejes temáticos según idioma
+        // ejes temáticos para las preguntas (español e inglés)
         $axesByLang = [
             "es" => [
                 "Conceptos de periodontitis",
@@ -323,7 +215,7 @@ class QuestionController
             $distribution[$axis] = $base + ($idx < $rem ? 1 : 0);
         }
 
-        // Generar detalle de la distribución
+        // generar detalle de la distribución
         $distribDetail = "";
         foreach ($distribution as $axis => $n) {
             if ($n > 0) { // no listar ejes con 0
@@ -353,7 +245,7 @@ class QuestionController
                     "OPCIONES" => [
                         "type" => "array",
                         "minItems" => 4,
-                        "maxItems" => 4, // fijo a 4
+                        "maxItems" => 4, // fijo a 4 opciones x preg.
                         "items" => [
                             "type" => "object",
                             "properties" => [
@@ -401,12 +293,12 @@ class QuestionController
             $client = new GeminiAIService();
             $result = $client->generateJson($prompt, $schema);
 
-            // Compatibilidad por si Gemini devuelve { "questions": [...] }
+            // si Gemini devuelve { "questions": [...] }
             if (is_array($result) && isset($result["questions"]) && is_array($result["questions"])) {
                 $result = $result["questions"];
             }
 
-            // Validación básica del resultado
+            // Validación del resultado
             if (!is_array($result) || count($result) === 0) {
                 throw new Exception("La IA no devolvió un array de preguntas");
             }
@@ -427,12 +319,12 @@ class QuestionController
                 }
             }
 
+            // validación de opciones y retroalimentación
             foreach ($result as $i => $q) {
                 if (!isset($q["OPCIONES"]) || !is_array($q["OPCIONES"]) || count($q["OPCIONES"]) !== 4) {
                     throw new Exception("Pregunta #" . ($i + 1) . " no tiene 4 opciones");
                 }
 
-                // Validar RETROALIMENTACION
                 if (!isset($q["RETROALIMENTACION"]) || !is_string($q["RETROALIMENTACION"])) {
                     throw new Exception("Pregunta #" . ($i + 1) . " no tiene RETROALIMENTACION válida");
                 }
@@ -464,7 +356,7 @@ class QuestionController
             }
             unset($q);
 
-            /* foreach ($result as &$q) { // quitar campo eje (temporal)
+            /* foreach ($result as &$q) { // quitar campo eje (no bd)
                 unset($q["EJE"]);
             }
             unset($q); */
@@ -473,7 +365,7 @@ class QuestionController
             $data = $this->questionService->saveAiQuestions($result);
 
 
-            // devolver JSON al front ($result para postman)
+            // devolver JSON al front ($result 2 postman)
             Response::json2(200, "Preguntas generadas con Gemini AI exitosamente", $data);
         } catch (Exception $e) {
             Response::json2(500, "Error de Gemini AI: " . $e->getMessage(), null);
@@ -582,7 +474,7 @@ class QuestionController
     public function getById(string $questionId): void
     {
         try {
-            // Validar el ID antes de hacer la consulta
+            // validar ID antes de la consulta
             $questionId = trim($questionId);
             if (!preg_match('/^[0-9a-fA-F-]{36}$/', $questionId)) {
                 Response::json2(400, 'ID de pregunta inválido', null);
@@ -724,7 +616,7 @@ class QuestionController
             $statusRaw = isset($_GET['status']) ? strtolower(trim((string)$_GET['status'])) : 'all'; // default = all
             $status = null;
 
-            if ($statusRaw !== '' && $statusRaw !== 'all') { // si viene 'active' o 'inactive'
+            if ($statusRaw !== '' && $statusRaw !== 'all') { // si es 'active' o 'inactive'
                 if (!in_array($statusRaw, ['active', 'inactive'], true)) {
                     $this->response->json2(400, 'status no válido (all | active | inactive)', null);
                     return;

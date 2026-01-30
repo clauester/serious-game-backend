@@ -73,7 +73,6 @@ class UserRoutes
             return true;
         }
 
-
-        return false; // no coincidió ninguna ruta
+        return false;
     }
 }

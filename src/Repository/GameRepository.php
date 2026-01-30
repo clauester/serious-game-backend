@@ -2,15 +2,18 @@
 
 require_once __DIR__ . '/../config/database.php';
 
-class GameRepository {
+class GameRepository
+{
     private $pdo;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->pdo = (new Database())->connect();
     }
 
 
-    public function getAllGames(string $action) {
+    public function getAllGames(string $action)
+    {
         $stmt = $this->pdo->prepare("CALL sp_game_crud(?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bindParam(1, $action);
         $stmt->bindValue(2, null);
@@ -45,7 +48,7 @@ class GameRepository {
         ?string $status,
         ?int $grade,
         ?string $gameId
-        
+
     ) {
         $stmt = $this->pdo->prepare("CALL sp_game_crud(?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bindParam(1, $action);
@@ -58,6 +61,6 @@ class GameRepository {
         $stmt->bindValue(8, null);
         $stmt->execute();
 
-        return $stmt->fetch(); // tu SP debe retornar el nuevo juego
+        return $stmt->fetch(); // return the created game
     }
 }

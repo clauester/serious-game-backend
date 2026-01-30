@@ -87,7 +87,7 @@ class StatsRepository
         FROM user_answer ua
         INNER JOIN question q ON q.id = ua.question_id
 
-        -- Incluir todas las opciones de la pregunta
+        -- incluir todas las opciones de la pregunta
         INNER JOIN question_option opt ON opt.question_id = ua.question_id
 
         -- Opción correcta (para mostrar si el usuario falló)

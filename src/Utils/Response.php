@@ -1,10 +1,11 @@
 <?php
 
-class Response {
+class Response
+{
 
     public static function json2(int $status, string $message, $data = null): void
     {
-        // forzar tipo int por si acaso
+        // forzar tipo int
         $status = (int) $status;
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
@@ -20,7 +21,8 @@ class Response {
 
         echo json_encode($payload, JSON_UNESCAPED_UNICODE);
     }
-    public static function json($data, $status = 200) {
+    public static function json($data, $status = 200)
+    {
         http_response_code($status);
         header("Content-Type: application/json");
         echo json_encode([
@@ -28,6 +30,4 @@ class Response {
             "data" => $data
         ]);
     }
-    
-
 }

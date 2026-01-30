@@ -32,7 +32,7 @@ class CsvReader
                 $header = array_map(static function ($h, $idx) {
                     $h = CsvReader::ensureUTF8(trim((string)$h));
                     if ($idx === 0) {
-                        // Quitar BOM si existe
+                        // eliminar BOM si existe
                         $h = preg_replace('/^\xEF\xBB\xBF/', '', $h) ?? $h;
                     }
                     return $h;
@@ -54,7 +54,7 @@ class CsvReader
                     throw new InvalidArgumentException('Missing required CSV columns: ' . implode(', ', $missingCols));
                 }
 
-                // header no tenga columnas adicionales a las requeridas
+                // header sin columnas adicionales a las requeridas
                 $extraCols = array_diff($header, $requiredColumns);
 
                 if (!empty($extraCols)) {
@@ -65,11 +65,10 @@ class CsvReader
                 continue;
             }
 
-            // Si hay header, misma longitud para array_combine
             if ($hasHeader) {
                 $data = array_map(static fn($v) => is_string($v) ? CsvReader::ensureUTF8(trim($v)) : $v, $data);
 
-                // Validar que la fila tenga exactamente el mismo número de columnas que el header
+                //validar que la fila tenga exactamente el mismo número de columnas que el header
                 $expected = count($header);
                 $actual = count($data);
                 if ($actual !== $expected) {
@@ -163,22 +162,21 @@ class CsvReader
             // definir la estructura de la opción para agruparla
             $opcion = [
                 'TEXTO_OPCION' => $fila['TEXTO_OPCION'],
-                // Convertimos 'TRUE'/'FALSE' a booleano 
+                // convertir TRUE/FALSE a boolean
                 'ES_CORRECTA' => (strtoupper(trim((string)($fila['ES_CORRECTA'] ?? ''))) === 'TRUE')
             ];
 
-            // verificar si la pregunta ya existe en el nuevo array
+            // si la pregunta aún no existe, crearla
             if (!isset($preguntas_agrupadas[$id])) {
-                // Inicializar el objeto de la pregunta con datos comunes
+                // crear la estructura base de la pregunta
                 $preguntas_agrupadas[$id] = [
                     'ID_PREGUNTA_UNICA' => $id,
                     'TITULO_PREGUNTA' => $fila['TITULO_PREGUNTA'],
                     'DESCRIPCION_PREGUNTA' => $fila['DESCRIPCION_PREGUNTA'],
-                    //'TIPO_PREGUNTA_ID' => $fila['TIPO_PREGUNTA_ID'],
                     'NOTA_CONSEJO' => $fila['NOTA_CONSEJO'],
                     'RETROALIMENTACION' => $fila['RETROALIMENTACION'] ?? '',
-                    'LANG' => strtolower(trim((string)($fila['IDIOMA'] ?? ''))), // Normalizar a minúsculas
-                    'OPCIONES' => [] // Array vacío para almacenar las opciones
+                    'LANG' => strtolower(trim((string)($fila['IDIOMA'] ?? ''))), // normalizar a minúsculas
+                    'OPCIONES' => [] // array vacío para almacenar las opciones
                 ];
             }
 
@@ -186,7 +184,7 @@ class CsvReader
             $preguntas_agrupadas[$id]['OPCIONES'][] = $opcion;
         }
 
-        // Retornar el array de valores reindexado
+        // retornar el array de valores reindexado
         return array_values($preguntas_agrupadas);
     }
 }

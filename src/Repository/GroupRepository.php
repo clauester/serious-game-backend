@@ -2,10 +2,12 @@
 
 require_once __DIR__ . '/../config/database.php';
 
-class GroupRepository {
+class GroupRepository
+{
     private $pdo;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->pdo = (new Database())->connect();
     }
 
@@ -14,7 +16,7 @@ class GroupRepository {
         string $name,
         string $description,
         string $created_by
-    ){
+    ) {
         try {
             $stmt = $this->pdo->prepare("CALL sp_create_game_group(:p_name,:p_description, :p_code, :p_created_by)");
             $stmt->bindParam(":p_code", $code);
@@ -27,12 +29,11 @@ class GroupRepository {
             $stmt->closeCursor();
 
             return $result;
-            
         } catch (PDOException $e) {
             if ($e->getCode() === '45000') {
                 throw new RuntimeException($e->getMessage());
             }
-            
+
             throw new RuntimeException(
                 'Error al crear el grupo: ' . $e->getMessage(),
                 0,
@@ -42,7 +43,8 @@ class GroupRepository {
     }
 
 
-    public function getAllGroups() {
+    public function getAllGroups()
+    {
         try {
             $stmt = $this->pdo->prepare("CALL sp_list_game_groups()");
             $stmt->execute();
@@ -50,12 +52,11 @@ class GroupRepository {
             $stmt->closeCursor();
 
             return $groups;
-            
         } catch (PDOException $e) {
             if ($e->getCode() === '45000') {
                 throw new RuntimeException($e->getMessage());
             }
-            
+
             throw new RuntimeException(
                 'Error al obtener la lista de grupos: ' . $e->getMessage(),
                 0,
@@ -69,14 +70,14 @@ class GroupRepository {
         try {
             $trimmed = $query === null ? null : trim($query);
 
-            // Si no se envía query
+            // si no se envía query
             if ($trimmed === null || $trimmed === '') {
-                // Si tampoco se envía status, devolver todos
+                // además sin status, devolver todos
                 if ($status === null) {
                     return $this->getAllGroups();
                 }
 
-                // Si se envía sólo status, devolver grupos con ese status
+                // sólo status, filtrar por él
                 $sqlStatusOnly = "SELECT id, name, description, created_on, code, status, created_by
                     FROM game_group
                     WHERE status = :status
@@ -95,7 +96,7 @@ class GroupRepository {
                     FROM game_group
                     WHERE (name LIKE :q1 OR description LIKE :q2 or code LIKE :q3)";
 
-            // Si se especifica status, filtrar por él; si no, incluir tanto active como inactive
+            // se especifica status, filtrar, si no, incluir tanto active como inactive
             if ($status === null) {
                 $sql .= " AND status IN ('active','inactive')";
             } else {
@@ -135,7 +136,8 @@ class GroupRepository {
     }
 
     //get group questions by group id
-    public function getGroupQuestions($groupId) {
+    public function getGroupQuestions($groupId)
+    {
         try {
             $stmt = $this->pdo->prepare("CALL sp_get_group_questions(:p_id)");
             $stmt->bindParam(":p_id", $groupId);
@@ -144,12 +146,11 @@ class GroupRepository {
             $stmt->closeCursor();
 
             return $questions;
-            
         } catch (PDOException $e) {
             if ($e->getCode() === '45000') {
                 throw new RuntimeException($e->getMessage());
             }
-            
+
             throw new RuntimeException(
                 'Error al obtener las preguntas del grupo: ' . $e->getMessage(),
                 0,
@@ -158,7 +159,8 @@ class GroupRepository {
         }
     }
 
-    public function getAllGroupQuestions($groupId) {
+    public function getAllGroupQuestions($groupId)
+    {
         try {
             $stmt = $this->pdo->prepare("CALL sp_get_all_group_questions(:p_id)");
             $stmt->bindParam(":p_id", $groupId);
@@ -167,12 +169,11 @@ class GroupRepository {
             $stmt->closeCursor();
 
             return $questions;
-            
         } catch (PDOException $e) {
             if ($e->getCode() === '45000') {
                 throw new RuntimeException($e->getMessage());
             }
-            
+
             throw new RuntimeException(
                 'Error al obtener todas las preguntas del grupo: ' . $e->getMessage(),
                 0,
@@ -182,7 +183,8 @@ class GroupRepository {
     }
 
     //get group questions by group id
-    public function getQuestionsToAdd($accion, $group_id, $question_id) {
+    public function getQuestionsToAdd($accion, $group_id, $question_id)
+    {
         try {
             $stmt = $this->pdo->prepare("CALL sp_question_group_accion(:accion_name, :p_group_id, :p_question_id)");
             $stmt->bindParam(":accion_name", $accion);
@@ -194,12 +196,11 @@ class GroupRepository {
             $stmt->closeCursor();
 
             return $questions;
-            
         } catch (PDOException $e) {
             if ($e->getCode() === '45000') {
                 throw new RuntimeException($e->getMessage());
             }
-            
+
             throw new RuntimeException(
                 'Error al obtener preguntas para agregar: ' . $e->getMessage(),
                 0,
@@ -222,35 +223,34 @@ class GroupRepository {
         $questionsCsv = empty($questionIds) ? null : implode(',', $questionIds);
 
 
-    try {
-        $stmt = $this->pdo->prepare(
-            'CALL sp_register_group_questions_bulk(:group_id, :question_ids, :delete_ids)'
-        );
+        try {
+            $stmt = $this->pdo->prepare(
+                'CALL sp_register_group_questions_bulk(:group_id, :question_ids, :delete_ids)'
+            );
 
-        $stmt->bindValue(':group_id', $groupId, PDO::PARAM_STR);
-        $stmt->bindValue(':question_ids', $questionsCsv, PDO::PARAM_STR);
-        $stmt->bindValue(':delete_ids', $deleteCsv, PDO::PARAM_STR);
+            $stmt->bindValue(':group_id', $groupId, PDO::PARAM_STR);
+            $stmt->bindValue(':question_ids', $questionsCsv, PDO::PARAM_STR);
+            $stmt->bindValue(':delete_ids', $deleteCsv, PDO::PARAM_STR);
 
 
-        $stmt->execute();
+            $stmt->execute();
 
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $stmt->closeCursor();
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
 
-        return $result;
+            return $result;
+        } catch (PDOException $e) {
+            if ($e->getCode() === '45000') {
+                throw new RuntimeException($e->getMessage());
+            }
 
-    } catch (PDOException $e) {
-    if ($e->getCode() === '45000') {
-        throw new RuntimeException($e->getMessage());
+            throw new RuntimeException(
+                'Error al registrar preguntas en el grupo',
+                0,
+                $e
+            );
+        }
     }
-
-    throw new RuntimeException(
-        'Error al registrar preguntas en el grupo',
-        0,
-        $e
-    );
-    }
-}
 
     public function getGroupByCode(string $groupCode)
     {
@@ -258,18 +258,17 @@ class GroupRepository {
             $stmt = $this->pdo->prepare('CALL sp_get_group_by_code(:p_group_code)');
             $stmt->bindParam(':p_group_code', $groupCode, PDO::PARAM_STR);
             $stmt->execute();
-            
+
             $groupData = $stmt->fetch(PDO::FETCH_ASSOC);
             $stmt->closeCursor();
-            
+
             return $groupData;
-            
         } catch (PDOException $e) {
             if ($e->getCode() === '45000') {
                 $msg = $e->errorInfo[2] ?? $e->getMessage();
                 throw new RuntimeException($msg);
             }
-            
+
             throw new RuntimeException(
                 'Error al obtener el grupo por código: ' . $e->getMessage(),
                 0,
@@ -284,18 +283,17 @@ class GroupRepository {
             $stmt = $this->pdo->prepare('CALL sp_delete_group(:p_group_id)');
             $stmt->bindParam(':p_group_id', $groupId, PDO::PARAM_STR);
             $stmt->execute();
-            
+
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             $stmt->closeCursor();
-            
+
             return $result;
-            
         } catch (PDOException $e) {
             if ($e->getCode() === '45000') {
                 $msg = $e->errorInfo[2] ?? $e->getMessage();
                 throw new RuntimeException($msg);
             }
-            
+
             throw new RuntimeException(
                 'Error al desactivar el grupo: ' . $e->getMessage(),
                 0,
@@ -304,47 +302,44 @@ class GroupRepository {
         }
     }
 
- public function updateGroup(
-    string $groupId,
-    ?string $name,
-    ?string $description,
-    ?string $code,
-    ?string $status
-): bool {
-    try {
-        $stmt = $this->pdo->prepare(
-            'CALL sp_update_game_group(:p_id, :p_name, :p_description, :p_code, :p_status)'
-        );
+    public function updateGroup(
+        string $groupId,
+        ?string $name,
+        ?string $description,
+        ?string $code,
+        ?string $status
+    ): bool {
+        try {
+            $stmt = $this->pdo->prepare(
+                'CALL sp_update_game_group(:p_id, :p_name, :p_description, :p_code, :p_status)'
+            );
 
-        $params = [
-            ':p_id' => [$groupId, PDO::PARAM_STR],
-            ':p_name' => [$name, $name === null ? PDO::PARAM_NULL : PDO::PARAM_STR],
-            ':p_description' => [$description, $description === null ? PDO::PARAM_NULL : PDO::PARAM_STR],
-            ':p_code' => [$code, $code === null ? PDO::PARAM_NULL : PDO::PARAM_STR],
-            ':p_status' => [$status, $status === null ? PDO::PARAM_NULL : PDO::PARAM_STR],
-        ];
+            $params = [
+                ':p_id' => [$groupId, PDO::PARAM_STR],
+                ':p_name' => [$name, $name === null ? PDO::PARAM_NULL : PDO::PARAM_STR],
+                ':p_description' => [$description, $description === null ? PDO::PARAM_NULL : PDO::PARAM_STR],
+                ':p_code' => [$code, $code === null ? PDO::PARAM_NULL : PDO::PARAM_STR],
+                ':p_status' => [$status, $status === null ? PDO::PARAM_NULL : PDO::PARAM_STR],
+            ];
 
-        foreach ($params as $key => [$value, $type]) {
-            $stmt->bindValue($key, $value, $type);
+            foreach ($params as $key => [$value, $type]) {
+                $stmt->bindValue($key, $value, $type);
+            }
+
+            $stmt->execute();
+            $stmt->closeCursor();
+
+            return true;
+        } catch (PDOException $e) {
+            if ($e->getCode() === '45000') {
+                throw new RuntimeException($e->errorInfo[2] ?? $e->getMessage());
+            }
+
+            throw new RuntimeException(
+                'Error al actualizar el grupo: ' . $e->getMessage(),
+                0,
+                $e
+            );
         }
-
-        $stmt->execute();
-        $stmt->closeCursor();
-
-        return true;
-
-    } catch (PDOException $e) {
-        if ($e->getCode() === '45000') {
-            throw new RuntimeException($e->errorInfo[2] ?? $e->getMessage());
-        }
-
-        throw new RuntimeException(
-            'Error al actualizar el grupo: ' . $e->getMessage(),
-            0,
-            $e
-        );
     }
-}
-
-
 }

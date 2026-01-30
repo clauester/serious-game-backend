@@ -149,17 +149,6 @@ class QuestionService
         $this->repo->deactivateQuestion($questionId);
     }
 
-    // public function update($data, $id) {
-    //     return $this->repo->updateUser(
-    //         $id,
-    //         $data["name"],
-    //         $data["email"],
-    //         $data["password"],
-    //         $data["rol_id"],
-    //         $data["status_id"]
-    //     );
-    // }
-
     public function saveAiQuestions(array $questions): array
     {
         // Add AI_GENERATED flag to each question

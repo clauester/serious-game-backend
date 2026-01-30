@@ -32,7 +32,6 @@ class GroupController
             $q = $_GET['q'] ?? null;
             $status = array_key_exists('status', $_GET) ? $_GET['status'] : null;
 
-            // Si no se envía 'q' o está vacío
             if ($q === null || trim((string)$q) === '') {
                 // Si tampoco se envía status, devolver todos
                 if ($status === null) {
@@ -41,7 +40,7 @@ class GroupController
                     return;
                 }
 
-                // Si se envía sólo status, devolver grupos con ese status
+                // solo status, filtrar por status
                 $result = $this->service->searchGroups(null, $status);
                 Response::json2(200, 'Grupos filtrados por status obtenidos exitosamente', $result);
                 return;
@@ -107,8 +106,7 @@ class GroupController
 
     public function deactivateGroup($groupId)
     {
-        // Lógica para desactivar el grupo (cambiar su estado a inactivo)
-        // Aquí llamarías a tu modelo o servicio
+        // cambiar estado del grupo a inactivo
         $result = $this->service->deactivateGroup($groupId);
 
         Response::json2(200, 'Grupo desactivado exitosamente', null);
@@ -137,7 +135,7 @@ class GroupController
     public function getGroupByCode($groupCode)
     {
         try {
-            // normalizar a mayúsculas y eliminar espacios del código recibido
+            // normalizar código
             $groupCode = strtoupper(trim((string)$groupCode));
 
             if ($groupCode === '') {
@@ -152,7 +150,7 @@ class GroupController
 
             $result = $this->service->getGroupByCode($groupCode);
 
-            if(empty($result)) {
+            if (empty($result)) {
                 Response::json2(404, 'Grupo no disponible', null);
                 return;
             }

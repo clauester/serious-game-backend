@@ -72,7 +72,7 @@ class UserService
 
         if (!$profileData) return null;
 
-        // en caso de que el sp retorne datos sensibles
+        // prevenir que sp retorne datos sensibles
         unset($profileData['password'], $profileData['rol_id'], $profileData['status_id']);
 
         return $profileData;

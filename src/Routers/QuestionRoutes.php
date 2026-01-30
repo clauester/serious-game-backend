@@ -16,19 +16,19 @@ class QuestionRoutes
             return true;
         }
 
-        // POST /questions -> opcional, lista preguntas
+        // POST /questions 
         if ($cleanUri === "/questions/upload2" && $method === "POST") {
-            $controller->uploadCsv(); // si implementas listado
+            $controller->uploadCsv();
             return true;
         }
 
-        // GET /questions -> opcional, lista preguntas
+        // GET /questions 
         if ($cleanUri === "/questions/all" && $method === "GET") {
-            $controller->findAll(); // si implementas listado
+            $controller->findAll();
             return true;
         }
 
-        // POST /questions -> opcional, lista preguntas
+        // POST /questions 
         // update 1 question option
         if ($cleanUri === "/questions/answer/save" && $method === "POST") {
             $controller->saveUserAnswerOption();
@@ -45,7 +45,7 @@ class QuestionRoutes
             return true;
         }
 
-        // // GET /questions/{id} -> opcional, detalles de pregunta
+        // // GET /questions/{id} ->  detalles de pregunta
         // if (preg_match("#^/questions/([0-9a-fA-F-]{36})$#", $cleanUri, $matches)
         //     && $method === "GET") {
         //     // $controller->getById($matches[1]);
@@ -90,13 +90,13 @@ class QuestionRoutes
             return true;
         }
 
-        // GET /questions/template/download (descargar plantilla CSV)
+        // GET /questions/template/download - descargar plantilla CSV
         if ($cleanUri === '/questions/template/download' && $method === "GET") {
             $controller->downloadCsvTemplate();
             return true;
         }
 
-        // PUT Actualizar status a active (reactivar pregunta)
+        // PUT /questions/reactivate/{uuid} - Actualizar status a active (reactivar pregunta)
         if (
             preg_match("#^/questions/reactivate/([0-9a-fA-F-]{36})$#", $cleanUri, $matches)
             && $method === "PUT"

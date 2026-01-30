@@ -61,7 +61,6 @@ class UserController
             return;
         }
 
-        // Aquí llamarías a tu modelo o servicio
         $result = $this->service->update($data, $id);
 
         Response::json($result);
@@ -149,7 +148,6 @@ class UserController
                 Response::json2(400, 'ID de usuario inválido', null);
                 return;
             }
-
 
             $plainPass = $this->service->resetPassword($userId);
 
