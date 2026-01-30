@@ -37,6 +37,7 @@ class QuestionService
                     "ai_generated" => $row["ai_generated"],
                     "lang" => $row["lang"],
                     "feedback" => $row["feedback"],
+                    "status" => $row["status"],
                     "options" => []
                 ];
             }
@@ -193,9 +194,9 @@ class QuestionService
         return $this->repo->updateQuestion($questionId, $title, $description, $tipNote, $lang, $feedback, $options);
     }
 
-    public function searchQuestions(?string $q, ?int $ai, ?string $lang): array
+    public function searchQuestions(?string $q, ?int $ai, ?string $lang, ?string $status): array
     {
-        $rows = $this->repo->searchQuestions($q, $ai, $lang);
+        $rows = $this->repo->searchQuestions($q, $ai, $lang, $status);
 
         $questions = [];
 
@@ -214,6 +215,7 @@ class QuestionService
                     "ai_generated" => $row["ai_generated"],
                     "lang" => $row["lang"],
                     "feedback" => $row["feedback"],
+                    "status" => $row["status"],
                     "options" => []
                 ];
             }
@@ -225,5 +227,10 @@ class QuestionService
         }
 
         return array_values($questions);
+    }
+
+    public function reactivateQuestion(string $questionId): void
+    {
+        $this->repo->reactivateQuestion($questionId);
     }
 }

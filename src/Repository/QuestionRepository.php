@@ -199,14 +199,22 @@ class QuestionRepository
         if ($description === '') {
             return false;
         }
-
+        /*  solo se consideraban preguntas activas duplicadas
         $sql = "
         SELECT 1
         FROM question
         WHERE status = 'active'
           AND description IS NOT NULL
           AND description = ?
-        LIMIT 1";
+        LIMIT 1"; */
+
+        $sql = "
+        SELECT 1
+        FROM question
+        WHERE description IS NOT NULL
+          AND description = ?
+        LIMIT 1
+        ";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$description]);
@@ -394,7 +402,7 @@ class QuestionRepository
         }
     }
 
-    public function searchQuestions(?string $q, ?int $aiGenerated, ?string $lang): array
+    public function searchQuestions(?string $q, ?int $aiGenerated, ?string $lang, ?string $status): array
     {
         $sql = "
         SELECT
@@ -408,11 +416,12 @@ class QuestionRepository
             q.created_on,
             q.ai_generated,
             q.lang,
-            q.feedback
+            q.feedback,
+            q.status
         FROM question q
         JOIN question_option qo ON q.id = qo.question_id
         JOIN question_type qt ON q.type_id = qt.id
-        WHERE q.status = 'active'
+        WHERE 1=1
     ";
 
         $params = [];
@@ -437,6 +446,12 @@ class QuestionRepository
             $params[':lang'] = $lang;
         }
 
+        // filtro status (active / inactive)
+        if ($status !== null && $status !== '') {
+            $sql .= " AND q.status = :status ";
+            $params[':status'] = $status;
+        }
+
         $sql .= " ORDER BY q.created_on DESC ";
 
         $stmt = $this->pdo->prepare($sql);
@@ -455,5 +470,15 @@ class QuestionRepository
         $stmt->closeCursor();
 
         return $rows;
+    }
+
+    public function reactivateQuestion(string $questionId)
+    {
+        $stmt = $this->pdo->prepare('CALL sp_reactivate_question(:p_question_id)');
+        $stmt->bindParam(':p_question_id', $questionId, PDO::PARAM_STR);
+        $stmt->execute();
+
+        $stmt->closeCursor();
+        return $stmt->fetch();
     }
 }

@@ -720,8 +720,19 @@ class QuestionController
                 }
                 $lang = $langRaw;
             }
+            // status: all | active | inactive (opcional)
+            $statusRaw = isset($_GET['status']) ? strtolower(trim((string)$_GET['status'])) : 'all'; // default = all
+            $status = null;
 
-            $questions = $this->questionService->searchQuestions($q, $ai, $lang);
+            if ($statusRaw !== '' && $statusRaw !== 'all') { // si viene 'active' o 'inactive'
+                if (!in_array($statusRaw, ['active', 'inactive'], true)) {
+                    $this->response->json2(400, 'status no válido (all | active | inactive)', null);
+                    return;
+                }
+                $status = $statusRaw;
+            }
+
+            $questions = $this->questionService->searchQuestions($q, $ai, $lang, $status);
             $this->response->json2(200, 'Listado de preguntas (filtradas)', $questions);
         } catch (Throwable $e) {
             $this->response->json2(500, 'Error al filtrar preguntas: ' . $e->getMessage(), null);
@@ -779,5 +790,15 @@ class QuestionController
 
         echo $out;
         exit;
+    }
+
+    public function reactivateQuestion(string $questionId): void
+    {
+        try {
+            $this->questionService->reactivateQuestion($questionId);
+            Response::json2(200, 'Pregunta reactivada exitosamente', null);
+        } catch (Exception $e) {
+            Response::json2(500, 'Error al reactivar la pregunta: ' . $e->getMessage(), null);
+        }
     }
 }

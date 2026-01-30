@@ -57,7 +57,7 @@ class QuestionRoutes
             return true;
         }
 
-        //change question status to deleted
+        //change question status to inactive
         if (
             preg_match("#^/questions/delete/([0-9a-fA-F-]{36})$#", $cleanUri, $matches)
             && $method === "PUT"
@@ -93,6 +93,15 @@ class QuestionRoutes
         // GET /questions/template/download (descargar plantilla CSV)
         if ($cleanUri === '/questions/template/download' && $method === "GET") {
             $controller->downloadCsvTemplate();
+            return true;
+        }
+
+        // PUT Actualizar status a active (reactivar pregunta)
+        if (
+            preg_match("#^/questions/reactivate/([0-9a-fA-F-]{36})$#", $cleanUri, $matches)
+            && $method === "PUT"
+        ) {
+            $controller->reactivateQuestion($matches[1]);
             return true;
         }
 
