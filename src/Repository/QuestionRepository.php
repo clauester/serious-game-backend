@@ -35,11 +35,11 @@ class QuestionRepository
         try {
             // preparar Sentencias
             $stmt_pregunta = $this->pdo->prepare(
-                "CALL serius_game_periodontitits.sp_create_question(?, ?, ?, ?, ?, ?, ?)"
+                "CALL sp_create_question(?, ?, ?, ?, ?, ?, ?)"
             );
 
             $stmt_opcion = $this->pdo->prepare(
-                "CALL serius_game_periodontitits.sp_create_question_option(?, ?, ?)"
+                "CALL sp_create_question_option(?, ?, ?)"
             );
 
             // iterar sobre cada Pregunta
@@ -246,11 +246,11 @@ class QuestionRepository
             }
 
             $stmt_pregunta = $this->pdo->prepare(
-                "CALL serius_game_periodontitits.sp_create_question(?, ?, ?, ?, ?, ?, ?)"
+                "CALL sp_create_question(?, ?, ?, ?, ?, ?, ?)"
             );
 
             $stmt_opcion = $this->pdo->prepare(
-                "CALL serius_game_periodontitits.sp_create_question_option(?, ?, ?)"
+                "CALL sp_create_question_option(?, ?, ?)"
             );
 
             $paramsPregunta = [
