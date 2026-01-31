@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../Utils/CsvReader.php';
+require_once __DIR__ . '/../Utils/csvReader.php';
 require_once __DIR__ . '/../Utils/Response.php';
 require_once __DIR__ . '/../Service/QuestionService.php';
 
