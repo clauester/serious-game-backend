@@ -192,26 +192,27 @@ class QuestionRepository
     {
         $description = trim($description);
 
-        // Si la descripción viene vacía, no se considera existente
+        // descripción viene vacía, no se considera existente
         if ($description === '') {
             return false;
         }
-        /*  solo se consideraban preguntas activas duplicadas
+        //  buscar pregunta activa duplicada
         $sql = "
         SELECT 1
         FROM question
         WHERE status = 'active'
           AND description IS NOT NULL
           AND description = ?
-        LIMIT 1"; */
+        LIMIT 1";
 
+        /* pregunta duplicada sin importar su estado
         $sql = "
         SELECT 1
         FROM question
         WHERE description IS NOT NULL
           AND description = ?
         LIMIT 1
-        ";
+        "; */
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$description]);
