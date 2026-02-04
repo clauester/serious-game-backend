@@ -181,8 +181,8 @@ class QuestionController
             return;
         }
 
-        if ($count < 2 || $count > 10) {
-            Response::json2(400, "cantidad debe estar entre 5 y 10", null);
+        if ($count < 5 || $count > 15) {
+            Response::json2(400, "cantidad debe estar entre 5 y 15", null);
             return;
         }
         if (!in_array($difficulty, ["baja", "media", "alta"], true)) {
@@ -230,8 +230,7 @@ class QuestionController
         // Schema del formato que se requiere recibir de Gemini AI
         $schema = [
             "type" => "array",
-            "minItems" => $count,
-            "maxItems" => $count,
+            //"maxItems" => $count,
             "items" => [
                 "type" => "object",
                 "properties" => [
@@ -239,27 +238,24 @@ class QuestionController
                         "type" => "string",
                         "enum" => $axes // ejes segun idioma
                     ],
-                    "TITULO_PREGUNTA" => ["type" => "string", "minLength" => 10, "maxLength" => 50],
-                    "DESCRIPCION_PREGUNTA" => ["type" => "string", "minLength" => 10, "maxLength" => 150],
-                    "NOTA_CONSEJO" => ["type" => "string", "minLength" => 15, "maxLength" => 75],
+                    "TITULO_PREGUNTA" => ["type" => "string", "maxLength" => 50],
+                    "DESCRIPCION_PREGUNTA" => ["type" => "string", "maxLength" => 150],
+                    "NOTA_CONSEJO" => ["type" => "string", "maxLength" => 75],
                     "OPCIONES" => [
                         "type" => "array",
-                        "minItems" => 4,
                         "maxItems" => 4, // fijo a 4 opciones x preg.
                         "items" => [
                             "type" => "object",
                             "properties" => [
-                                "TEXTO_OPCION" => ["type" => "string", "minLength" => 10, "maxLength" => 100],
+                                "TEXTO_OPCION" => ["type" => "string", "maxLength" => 100],
                                 "ES_CORRECTA" => ["type" => "boolean"],
                             ],
                             "required" => ["TEXTO_OPCION", "ES_CORRECTA"],
-                            //"additionalProperties" => false
                         ]
                     ],
-                    "RETROALIMENTACION" => ["type" => "string", "minLength" => 40, "maxLength" => 170],
+                    "RETROALIMENTACION" => ["type" => "string", "maxLength" => 170],
                 ],
                 "required" => ["EJE", "TITULO_PREGUNTA", "DESCRIPCION_PREGUNTA", "NOTA_CONSEJO", "OPCIONES", "RETROALIMENTACION"],
-                //"additionalProperties" => false
             ]
         ];
 
@@ -278,6 +274,7 @@ class QuestionController
             "- NOTA_CONSEJO es un texto breve tipo pista que ayuda a guiar a la opción correcta sin revelar la respuesta ni ser demasiado obvio.\n" .
             "- OPCIONES debe tener EXACTAMENTE 4 elementos.\n" .
             "- EXACTAMENTE 1 opción con ES_CORRECTA=TRUE (boolean real).\n" .
+            "- Los textos de las opciones no deben ser muy similares entre sí y deben ser plausibles para evitar respuestas obvias.\n" .
             $languageRule .
             "- El campo EJE debe estar en el mismo idioma indicado.\n" .
             "- RETROALIMENTACION: mensaje informativo que explica la respuesta correcta y amplía el aprendizaje.\n" .
@@ -301,6 +298,12 @@ class QuestionController
             // Validación del resultado
             if (!is_array($result) || count($result) === 0) {
                 throw new Exception("La IA no devolvió un array de preguntas");
+            }
+
+            if (count($result) !== $count) { // cantidad incorrecta
+                throw new Exception(
+                    "Se obtuvieron menos preguntas de las solicitadas. Obtenidas: " . count($result)
+                );
             }
 
             $counts = array_fill_keys(array_keys($distribution), 0); // iniciar contador segun ejes
