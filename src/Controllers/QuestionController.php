@@ -230,7 +230,6 @@ class QuestionController
         // Schema del formato que se requiere recibir de Gemini AI
         $schema = [
             "type" => "array",
-            //"maxItems" => $count,
             "items" => [
                 "type" => "object",
                 "properties" => [
@@ -640,8 +639,7 @@ class QuestionController
         $path = $root . '/resources/downloads/questions_template_v2.csv'; // ruta al archivo CSV plantilla
 
         if (!is_file($path)) {
-            http_response_code(404);
-            echo "CSV template file not found";
+            Response::json2(404, "CSV template file not found");
             return;
         }
 
@@ -655,8 +653,7 @@ class QuestionController
 
         $raw = file_get_contents($path);
         if ($raw === false) {
-            http_response_code(500);
-            echo "Error reading CSV template file";
+            Response::json2(500, "Error reading CSV template file");
             return;
         }
 
