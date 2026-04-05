@@ -1,15 +1,17 @@
 <?php
 
-class Database {
+class Database
+{
     private $host = "localhost";
     private $db = "serius_game_periodontitits";
     private $user = "root";
     private $pass = "";
     private $charset = "utf8mb4";
 
-    public function connect() {
-        $dsn = "mysql:host={$this->host};port=3310;dbname={$this->db};charset={$this->charset}";
-        
+    public function connect()
+    {
+        $dsn = "mysql:host={$this->host};port=3306;dbname={$this->db};charset={$this->charset}";
+
         $options = [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
