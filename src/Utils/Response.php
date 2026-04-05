@@ -2,13 +2,14 @@
 
 class Response
 {
-
     public static function json2(int $status, string $message, $data = null): void
     {
         // forzar tipo int
         $status = (int) $status;
         http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+        }
 
         $payload = [
             'status'  => $status,
@@ -24,10 +25,12 @@ class Response
     public static function json($data, $status = 200)
     {
         http_response_code($status);
-        header("Content-Type: application/json");
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+        }
         echo json_encode([
             "success" => $status < 400,
             "data" => $data
-        ]);
+        ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
 }

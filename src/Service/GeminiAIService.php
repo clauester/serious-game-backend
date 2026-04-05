@@ -17,28 +17,9 @@ class GeminiAIService
 
     public function generateJson(string $prompt, array $jsonSchema): array
     {
-        // Endpoint oficial REST: models/{model}:generateContent
+        // Endpoint oficial REST de Gemini AI
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent"; // :contentReference[oaicite:1]{index=1}
 
-        /*
-        $payload = [
-            "contents" => [
-                [
-                    "role" => "user",
-                    "parts" => [
-                        ["text" => $prompt]
-                    ]
-                ]
-            ],
-            "generationConfig" => [
-                // Structured outputs (JSON + schema)
-                "response_mime_type" => "application/json",
-                "response_json_schema" => $jsonSchema,
-                "temperature" => 0.4,
-                "maxOutputTokens" => 3200
-            ]
-        ]; // :contentReference[oaicite:2]{index=2}
-*/
         $payload = [
             "contents" => [
                 [
@@ -53,7 +34,7 @@ class GeminiAIService
                 "responseSchema"   => $jsonSchema,   // <- schema usado
                 "candidateCount"   => 1,
                 "temperature"      => 0.4,
-                "maxOutputTokens"  => 6500 // estimado para ~10 preguntas
+                "maxOutputTokens"  => 9500 // 6500 estimado para ~10 preguntas
             ]
         ];
 
@@ -115,7 +96,7 @@ class GeminiAIService
 
         $json = json_decode($text, true);
         if (!is_array($json)) {
-            throw new Exception("Gemini no devolvió un JSON válido. Texto: {$text}");
+            throw new Exception("Gemini devolvió una respuesta no válida. Por favor, intente nuevamente.");
         }
 
         return $json;

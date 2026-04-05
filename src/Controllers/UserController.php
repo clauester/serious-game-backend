@@ -37,7 +37,10 @@ class UserController
         $data = json_decode(file_get_contents("php://input"), true);
 
         if (!$data) {
-            echo json_encode(["error" => "Invalid JSON"]);
+            Response::json(
+                ["error" => "Invalid JSON"],
+                400
+            );
             return;
         }
 
@@ -57,7 +60,10 @@ class UserController
         $data = json_decode(file_get_contents("php://input"), true);
 
         if (!$data) {
-            echo json_encode(["error" => "Invalid JSON"]);
+            Response::json(
+                ["error" => "Invalid JSON"],
+                400
+            );
             return;
         }
 
