@@ -3395,7 +3395,8 @@ CREATE TABLE `user` (
 
 INSERT INTO `user` (`id`, `name`, `email`, `password`, `rol_id`, `status_id`, `created_on`) VALUES
 ('0e558da9-fe05-11f0-aaaa-745d22b52004', 'SG Administrator', 'admin@sg.com', '$2y$10$oTiZVNcfFVWxThyXMuBNbOa6QRR2UoVbvX94RdaRb0EyEGg8G3.5y', '453751ca-c270-11f0-9e66-88a4c233c11d', '09587991-c270-11f0-9e66-88a4c233c11d', '2026-01-30 12:56:48'),
-('fc47e711-db09-11f0-a527-88a4c233c11d', 'test user', 'testemail2@gmail.com', '$2y$10$tx74m5p8BXFN1JqyImPMGeMa7MKF.vwe9/9AMcPMk3uhH94FyNEhK', '45375124-c270-11f0-9e66-88a4c233c11d', '09587991-c270-11f0-9e66-88a4c233c11d', '2025-12-17 00:33:58');
+('fc47e711-db09-11f0-a527-88a4c233c11d', 'test user', 'testemail2@gmail.com', '$2y$10$tx74m5p8BXFN1JqyImPMGeMa7MKF.vwe9/9AMcPMk3uhH94FyNEhK', '45375124-c270-11f0-9e66-88a4c233c11d', '09587991-c270-11f0-9e66-88a4c233c11d', '2025-12-17 00:33:58'),
+('9c1835c4-309e-11f1-bdfc-745d22b52004', 'Participante Demo', 'participanteGUM01@gmail.com', '$2y$10$Y1mV1ib4Y2zhEUvjXHhv6uwt7PzrHJXJbl7vm7lAYs4WdRkZSk.Wm', '45375124-c270-11f0-9e66-88a4c233c11d', '09587991-c270-11f0-9e66-88a4c233c11d', '2026-02-10 22:22:00');
 
 -- --------------------------------------------------------
 
